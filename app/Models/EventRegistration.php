@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class EventRegistration extends Model
 {
@@ -39,14 +39,14 @@ class EventRegistration extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function friends(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'event_registration_friends', 'event_registration_id', 'friend_user_id')
-            ->withTimestamps();
-    }
-
     public function photos(): HasMany
     {
         return $this->hasMany(EventRegistrationPhoto::class);
+    }
+
+    public function friends(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'event_registration_friends')
+            ->withTimestamps();
     }
 }

@@ -5,36 +5,48 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\EventRegistrationPhoto;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class EventRegistrationController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function create(Event $event)
     {
-        // Check if user already registered
+        if ($event->status !== 'published') {
+            abort(404);
+        }
+
         $existingRegistration = EventRegistration::where('event_id', $event->id)
-            ->where('user_id', Auth::id())
+            ->where('user_id', auth()->id())
             ->first();
 
         if ($existingRegistration) {
-            return redirect()->route('events.show', $event)
-                ->with('info', 'You have already registered for this event.');
+            return redirect()->route('events.registrations.edit', [$event->id, $existingRegistration->id]);
         }
 
-        // Get all active alumni for friend selection
-        $alumni = User::where('status', 'active')
-            ->where('id', '!=', Auth::id())
-            ->orderBy('name')
-            ->get();
-
-        return view('event-registrations.create', compact('event', 'alumni'));
+        return view('events.register', compact('event'));
     }
 
     public function store(Request $request, Event $event)
     {
+        if ($event->status !== 'published') {
+            abort(404);
+        }
+
+        $existingRegistration = EventRegistration::where('event_id', $event->id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if ($existingRegistration) {
+            return redirect()->route('events.registrations.edit', [$event->id, $existingRegistration->id])
+                ->with('error', 'You have already registered for this event.');
+        }
+
         $validated = $request->validate([
             'arrival_date' => 'nullable|date',
             'coming_from_city' => 'nullable|string|max:255',
@@ -44,74 +56,48 @@ class EventRegistrationController extends Controller
             'travel_mode' => 'nullable|in:car,train,flight,bus,other',
             'return_journey_details' => 'nullable|string',
             'memories_description' => 'nullable|string',
-            'friends' => 'nullable|array',
-            'friends.*' => 'exists:users,id',
-            'memories_photos' => 'nullable|array',
-            'memories_photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120',
-            'photo_captions' => 'nullable|array',
-            'photo_captions.*' => 'nullable|string|max:255',
+            'photos' => 'nullable|array|max:10',
+            'photos.*' => 'image|max:2048',
+            'friend_ids' => 'nullable|array',
         ]);
 
-        // Check if already registered
-        $existingRegistration = EventRegistration::where('event_id', $event->id)
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if ($existingRegistration) {
-            return redirect()->route('events.show', $event)
-                ->with('error', 'You have already registered for this event.');
-        }
-
-        $validated['user_id'] = Auth::id();
+        $validated['user_id'] = auth()->id();
         $validated['event_id'] = $event->id;
         $validated['needs_stay'] = $request->has('needs_stay');
         $validated['coming_with_family'] = $request->has('coming_with_family');
 
         $registration = EventRegistration::create($validated);
 
-        // Attach friends
-        if ($request->has('friends') && is_array($request->friends)) {
-            $registration->friends()->sync($request->friends);
-        }
-
-        // Handle memory photos
-        if ($request->hasFile('memories_photos')) {
-            foreach ($request->file('memories_photos') as $index => $photo) {
-                $photoPath = $photo->store('event-registrations/photos', 'public');
-                
-                $caption = $request->photo_captions[$index] ?? null;
-                
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $photo) {
+                $photoPath = $photo->store('event-photos', 'public');
                 EventRegistrationPhoto::create([
                     'event_registration_id' => $registration->id,
                     'photo_path' => $photoPath,
-                    'caption' => $caption,
                 ]);
             }
         }
 
-        return redirect()->route('events.show', $event)
-            ->with('success', 'You have successfully registered for this event!');
+        if ($request->has('friend_ids')) {
+            $registration->friends()->attach($request->friend_ids);
+        }
+
+        return redirect()->route('events.show', $event->id)->with('success', 'Registration successful!');
     }
 
     public function edit(Event $event, EventRegistration $registration)
     {
-        if ($registration->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
-            abort(403, 'Unauthorized action.');
+        if ($registration->user_id !== auth()->id() || $registration->event_id !== $event->id) {
+            abort(403);
         }
 
-        $registration->load('friends', 'photos');
-        $alumni = User::where('status', 'active')
-            ->where('id', '!=', Auth::id())
-            ->orderBy('name')
-            ->get();
-
-        return view('event-registrations.edit', compact('event', 'registration', 'alumni'));
+        return view('events.edit-registration', compact('event', 'registration'));
     }
 
     public function update(Request $request, Event $event, EventRegistration $registration)
     {
-        if ($registration->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
-            abort(403, 'Unauthorized action.');
+        if ($registration->user_id !== auth()->id() || $registration->event_id !== $event->id) {
+            abort(403);
         }
 
         $validated = $request->validate([
@@ -123,12 +109,9 @@ class EventRegistrationController extends Controller
             'travel_mode' => 'nullable|in:car,train,flight,bus,other',
             'return_journey_details' => 'nullable|string',
             'memories_description' => 'nullable|string',
-            'friends' => 'nullable|array',
-            'friends.*' => 'exists:users,id',
-            'memories_photos' => 'nullable|array',
-            'memories_photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120',
-            'photo_captions' => 'nullable|array',
-            'photo_captions.*' => 'nullable|string|max:255',
+            'photos' => 'nullable|array|max:10',
+            'photos.*' => 'image|max:2048',
+            'friend_ids' => 'nullable|array',
         ]);
 
         $validated['needs_stay'] = $request->has('needs_stay');
@@ -136,74 +119,44 @@ class EventRegistrationController extends Controller
 
         $registration->update($validated);
 
-        // Update friends
-        if ($request->has('friends') && is_array($request->friends)) {
-            $registration->friends()->sync($request->friends);
-        } else {
-            $registration->friends()->detach();
-        }
-
-        // Handle new memory photos
-        if ($request->hasFile('memories_photos')) {
-            foreach ($request->file('memories_photos') as $index => $photo) {
-                $photoPath = $photo->store('event-registrations/photos', 'public');
-                
-                $caption = $request->photo_captions[$index] ?? null;
-                
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $photo) {
+                $photoPath = $photo->store('event-photos', 'public');
                 EventRegistrationPhoto::create([
                     'event_registration_id' => $registration->id,
                     'photo_path' => $photoPath,
-                    'caption' => $caption,
                 ]);
             }
         }
 
-        return redirect()->route('events.show', $event)
-            ->with('success', 'Your registration has been updated successfully!');
-    }
-
-    public function registeredFellows(Event $event)
-    {
-        // Get all registrations for this event from the same batch as the logged-in user
-        $user = Auth::user();
-        
-        if (!$user->graduation_year) {
-            return view('event-registrations.fellows', [
-                'event' => $event,
-                'fellows' => collect([]),
-                'message' => 'Your graduation year is not set. Please update your profile.'
-            ]);
+        if ($request->has('friend_ids')) {
+            $registration->friends()->sync($request->friend_ids);
         }
 
-        $fellows = EventRegistration::where('event_id', $event->id)
-            ->whereHas('user', function($query) use ($user) {
-                $query->where('graduation_year', $user->graduation_year)
-                      ->where('id', '!=', $user->id);
-            })
-            ->with(['user', 'friends'])
-            ->get();
-
-        return view('event-registrations.fellows', compact('event', 'fellows'));
+        return redirect()->route('events.show', $event->id)->with('success', 'Registration updated successfully!');
     }
 
     public function destroy(Event $event, EventRegistration $registration)
     {
-        if ($registration->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
-            abort(403, 'Unauthorized action.');
+        if ($registration->user_id !== auth()->id() || $registration->event_id !== $event->id) {
+            abort(403);
         }
 
-        // Delete photos
         foreach ($registration->photos as $photo) {
             Storage::disk('public')->delete($photo->photo_path);
-            $photo->delete();
         }
-
-        // Detach friends
-        $registration->friends()->detach();
 
         $registration->delete();
 
-        return redirect()->route('events.show', $event)
-            ->with('success', 'Registration cancelled successfully.');
+        return redirect()->route('events.show', $event->id)->with('success', 'Registration cancelled successfully!');
+    }
+
+    public function fellows(Event $event)
+    {
+        $registrations = EventRegistration::where('event_id', $event->id)
+            ->with(['user', 'photos'])
+            ->get();
+
+        return view('events.fellows', compact('event', 'registrations'));
     }
 }

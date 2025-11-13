@@ -22,19 +22,8 @@ class Campaign extends Model
         'end_date' => 'date',
     ];
 
-    /**
-     * Get the user who created this campaign
-     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    /**
-     * Scope to get only published campaigns
-     */
-    public function scopePublished($query)
-    {
-        return $query->where('status', 'published');
     }
 }

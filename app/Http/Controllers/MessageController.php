@@ -5,67 +5,57 @@ namespace App\Http\Controllers;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class MessageController extends Controller
 {
-    /**
-     * Display conversations for the authenticated user
-     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
-        $user = Auth::user();
+        $userId = auth()->id();
         
-        // Get all unique conversations (people user has messaged or been messaged by)
-        $conversations = Message::where(function($query) use ($user) {
-                $query->where('from_user_id', $user->id)
-                      ->orWhere('to_user_id', $user->id);
-            })
+        $conversations = Message::where('from_user_id', $userId)
+            ->orWhere('to_user_id', $userId)
             ->with(['fromUser', 'toUser'])
             ->orderBy('created_at', 'desc')
             ->get()
-            ->groupBy(function($message) use ($user) {
-                // Group by the other user in the conversation
-                return $message->from_user_id == $user->id 
-                    ? $message->to_user_id 
-                    : $message->from_user_id;
+            ->groupBy(function($message) use ($userId) {
+                return $message->from_user_id == $userId ? $message->to_user_id : $message->from_user_id;
             })
-            ->map(function($messages, $otherUserId) use ($user) {
-                $otherUser = User::find($otherUserId);
-                if (!$otherUser) return null;
-                
-                $latestMessage = $messages->first();
-                $unreadCount = $messages->where('to_user_id', $user->id)
-                    ->where('is_read', false)
-                    ->count();
-                
+            ->map(function($messages) use ($userId) {
+                $otherUser = $messages->first()->from_user_id == $userId 
+                    ? $messages->first()->toUser 
+                    : $messages->first()->fromUser;
+                $unreadCount = $messages->where('to_user_id', $userId)->where('is_read', false)->count();
                 return [
                     'user' => $otherUser,
-                    'latest_message' => $latestMessage,
+                    'last_message' => $messages->first(),
                     'unread_count' => $unreadCount,
                 ];
             })
-            ->filter()
-            ->values();
+            ->sortByDesc(function($conversation) {
+                return $conversation['last_message']->created_at;
+            });
 
         return view('messages.index', compact('conversations'));
     }
 
-    /**
-     * Show conversation with a specific user
-     */
     public function show(User $user)
     {
-        $currentUser = Auth::user();
+        $currentUser = auth()->user();
         
-        // Ensure user can only view conversations they're part of
-        if (!$currentUser->isAdmin() && $user->isAdmin() && $currentUser->id !== $user->id) {
-            abort(403, 'You can only view messages from admins.');
-        }
+        $messages = Message::where(function($query) use ($currentUser, $user) {
+            $query->where('from_user_id', $currentUser->id)
+                  ->where('to_user_id', $user->id);
+        })->orWhere(function($query) use ($currentUser, $user) {
+            $query->where('from_user_id', $user->id)
+                  ->where('to_user_id', $currentUser->id);
+        })->orderBy('created_at', 'asc')->get();
 
-        // Mark messages as read FIRST (before getting messages)
-        // This ensures they're marked before the view renders
-        $updatedCount = Message::where('from_user_id', $user->id)
+        Message::where('from_user_id', $user->id)
             ->where('to_user_id', $currentUser->id)
             ->where('is_read', false)
             ->update([
@@ -73,57 +63,27 @@ class MessageController extends Controller
                 'read_at' => now(),
             ]);
 
-        // Get all messages between current user and selected user
-        $messages = Message::where(function($query) use ($currentUser, $user) {
-                $query->where('from_user_id', $currentUser->id)
-                      ->where('to_user_id', $user->id);
-            })
-            ->orWhere(function($query) use ($currentUser, $user) {
-                $query->where('from_user_id', $user->id)
-                      ->where('to_user_id', $currentUser->id);
-            })
-            ->with(['fromUser', 'toUser'])
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        return view('messages.show', compact('messages', 'user'));
+        return view('messages.show', compact('user', 'messages'));
     }
 
-    /**
-     * Send a message
-     */
     public function store(Request $request, User $user)
     {
         $validated = $request->validate([
             'message' => 'required|string|max:5000',
         ]);
 
-        // Admins can message anyone, users can only message admins or reply
-        $currentUser = Auth::user();
-        
-        if (!$currentUser->isAdmin()) {
-            // Regular users can only message admins
-            if (!$user->isAdmin()) {
-                abort(403, 'You can only send messages to administrators.');
-            }
-        }
-
         Message::create([
-            'from_user_id' => $currentUser->id,
+            'from_user_id' => auth()->id(),
             'to_user_id' => $user->id,
             'message' => $validated['message'],
         ]);
 
-        return redirect()->route('messages.show', $user)
-            ->with('success', 'Message sent successfully!');
+        return redirect()->route('messages.show', $user->id)->with('success', 'Message sent!');
     }
 
-    /**
-     * Get unread message count for notifications
-     */
     public function unreadCount()
     {
-        $count = Message::where('to_user_id', Auth::id())
+        $count = Message::where('to_user_id', auth()->id())
             ->where('is_read', false)
             ->count();
 

@@ -4,24 +4,34 @@ namespace App\Http\Controllers;
 
 use App\Models\Campaign;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class CampaignController extends Controller
 {
     public function index()
     {
-        $campaigns = Campaign::with('creator')
-            ->published()
-            ->orderBy('created_at', 'desc')
+        $campaigns = Campaign::where('status', 'published')
+            ->orderBy('start_date', 'desc')
             ->paginate(12);
-        
+
         return view('campaigns.index', compact('campaigns'));
+    }
+
+    public function show($id)
+    {
+        $campaign = Campaign::with('creator')->findOrFail($id);
+        return view('campaigns.show', compact('campaign'));
+    }
+
+    public function adminIndex()
+    {
+        $campaigns = Campaign::with('creator')->orderBy('created_at', 'desc')->paginate(20);
+        return view('admin.campaigns.index', compact('campaigns'));
     }
 
     public function create()
     {
-        return view('campaigns.create');
+        return view('admin.campaigns.create');
     }
 
     public function store(Request $request)
@@ -29,51 +39,39 @@ class CampaignController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'required|in:draft,published,archived',
+            'image' => 'nullable|image|max:2048',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'status' => 'required|in:draft,published',
         ]);
-
-        $validated['created_by'] = Auth::id();
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('campaigns', 'public');
         }
 
+        $validated['created_by'] = auth()->id();
         Campaign::create($validated);
 
-        return redirect()->route('campaigns.index')
-            ->with('success', 'Campaign created successfully!');
+        return redirect()->route('admin.campaigns.index')->with('success', 'Campaign created successfully!');
     }
 
-    public function show(Campaign $campaign)
+    public function edit($id)
     {
-        return view('campaigns.show', compact('campaign'));
+        $campaign = Campaign::findOrFail($id);
+        return view('admin.campaigns.edit', compact('campaign'));
     }
 
-    public function edit(Campaign $campaign)
+    public function update(Request $request, $id)
     {
-        if ($campaign->created_by !== Auth::id() && !Auth::user()->isAdmin()) {
-            abort(403);
-        }
-
-        return view('campaigns.edit', compact('campaign'));
-    }
-
-    public function update(Request $request, Campaign $campaign)
-    {
-        if ($campaign->created_by !== Auth::id() && !Auth::user()->isAdmin()) {
-            abort(403);
-        }
+        $campaign = Campaign::findOrFail($id);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'required|in:draft,published,archived',
+            'image' => 'nullable|image|max:2048',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'status' => 'required|in:draft,published',
         ]);
 
         if ($request->hasFile('image')) {
@@ -85,23 +83,19 @@ class CampaignController extends Controller
 
         $campaign->update($validated);
 
-        return redirect()->route('campaigns.show', $campaign)
-            ->with('success', 'Campaign updated successfully!');
+        return redirect()->route('admin.campaigns.index')->with('success', 'Campaign updated successfully!');
     }
 
-    public function destroy(Campaign $campaign)
+    public function destroy($id)
     {
-        if ($campaign->created_by !== Auth::id() && !Auth::user()->isAdmin()) {
-            abort(403);
-        }
-
+        $campaign = Campaign::findOrFail($id);
+        
         if ($campaign->image) {
             Storage::disk('public')->delete($campaign->image);
         }
 
         $campaign->delete();
 
-        return redirect()->route('campaigns.index')
-            ->with('success', 'Campaign deleted successfully!');
+        return redirect()->route('admin.campaigns.index')->with('success', 'Campaign deleted successfully!');
     }
 }

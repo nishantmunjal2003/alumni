@@ -3,52 +3,53 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Event;
+use App\Models\Campaign;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function __construct()
     {
-        return view('admin.dashboard');
+        $this->middleware(['auth', 'admin']);
     }
 
-    public function users(Request $request)
+    public function dashboard()
     {
-        $query = User::with('roles');
+        $stats = [
+            'total_users' => User::count(),
+            'total_events' => Event::count(),
+            'total_campaigns' => Campaign::count(),
+            'pending_profiles' => User::where('profile_status', 'pending')
+                ->where('profile_completed', true)
+                ->count(),
+            'recent_registrations' => User::latest()->limit(5)->get(),
+        ];
 
-        // Search functionality
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
+        return view('admin.dashboard', compact('stats'));
+    }
 
-        $users = $query->orderBy('name')->paginate(15)->withQueryString();
-        $roles = Role::all();
-        
-        return view('admin.users.index', compact('users', 'roles'));
+    public function users()
+    {
+        $users = User::with('roles')->paginate(20);
+        return view('admin.users.index', compact('users'));
     }
 
     public function updateUserRoles(Request $request, User $user)
     {
-        $request->validate([
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,id',
+        $validated = $request->validate([
+            'roles' => 'required|array',
         ]);
 
-        $roles = $request->input('roles', []);
-        $user->syncRoles($roles);
+        $user->syncRoles($validated['roles']);
 
         return back()->with('success', 'User roles updated successfully!');
     }
 
     public function roles()
     {
-        $roles = Role::withCount('users')->orderBy('name')->get();
-        
+        $roles = Role::with('permissions')->get();
         return view('admin.roles.index', compact('roles'));
     }
 
@@ -63,24 +64,65 @@ class AdminController extends Controller
             'name' => 'required|string|max:255|unique:roles,name',
         ]);
 
-        Role::create([
-            'name' => $validated['name'],
-            'guard_name' => 'web',
-        ]);
+        Role::create(['name' => $validated['name'], 'guard_name' => 'web']);
 
-        return redirect()->route('admin.roles')
-            ->with('success', 'Role created successfully!');
+        return redirect()->route('admin.roles.index')->with('success', 'Role created successfully!');
     }
 
     public function destroyRole(Role $role)
     {
-        // Prevent deletion of default roles
-        if (in_array($role->name, ['admin', 'alumnus'])) {
-            return back()->with('error', 'Cannot delete default roles.');
+        $role->delete();
+        return redirect()->route('admin.roles.index')->with('success', 'Role deleted successfully!');
+    }
+
+    /**
+     * Show pending profiles for approval.
+     */
+    public function pendingProfiles()
+    {
+        $pendingProfiles = User::where('profile_status', 'pending')
+            ->where('profile_completed', true)
+            ->latest()
+            ->paginate(20);
+
+        return view('admin.profiles.pending', compact('pendingProfiles'));
+    }
+
+    /**
+     * Approve a user profile.
+     */
+    public function approveProfile(User $user)
+    {
+        if (!$user->profile_completed) {
+            return back()->withErrors(['error' => 'Profile is not completed yet.']);
         }
 
-        $role->delete();
+        $user->update([
+            'profile_status' => 'approved',
+            'status' => 'active',
+        ]);
 
-        return back()->with('success', 'Role deleted successfully!');
+        return back()->with('success', 'Profile approved successfully!');
+    }
+
+    /**
+     * Block a user profile.
+     */
+    public function blockProfile(User $user)
+    {
+        $user->update([
+            'profile_status' => 'blocked',
+            'status' => 'inactive',
+        ]);
+
+        return back()->with('success', 'Profile blocked successfully!');
+    }
+
+    /**
+     * View a specific profile for approval.
+     */
+    public function viewProfile(User $user)
+    {
+        return view('admin.profiles.view', compact('user'));
     }
 }

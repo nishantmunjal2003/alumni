@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
-use App\Models\User;
 use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Mail;
+use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
@@ -24,9 +25,15 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials, $request->filled('remember'))) {
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended('/alumni');
+            $user = Auth::user();
+            
+            if (!$user->canAccessDashboard()) {
+                return redirect()->route('profile.complete');
+            }
+            
+            return redirect()->intended('/dashboard');
         }
 
         return back()->withErrors([
@@ -45,93 +52,29 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'phone' => 'nullable|string|max:20',
+            'graduation_year' => 'nullable|string|max:10',
+            'major' => 'nullable|string|max:255',
         ]);
 
-        // Format name: First letter capital, rest lowercase
-        $formattedName = ucfirst(strtolower(trim($validated['name'])));
-        
         $user = User::create([
-            'name' => $formattedName,
+            'name' => $validated['name'],
             'email' => $validated['email'],
-            'password' => bcrypt($validated['password']),
-            'status' => 'active',
+            'password' => Hash::make($validated['password']),
+            'phone' => $validated['phone'] ?? null,
+            'graduation_year' => $validated['graduation_year'] ?? null,
+            'major' => $validated['major'] ?? null,
         ]);
 
-        // Assign alumnus role by default
-        $user->assignRole('alumnus');
+        // Ensure 'user' role exists
+        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        $user->assignRole('user');
 
-        // Send welcome email
-        try {
-            Mail::to($user->email)->send(new WelcomeMail($user));
-        } catch (\Exception $e) {
-            // Log error but don't prevent registration
-            \Log::error('Welcome email failed: ' . $e->getMessage());
-        }
+        Mail::to($user->email)->send(new WelcomeMail($user));
 
         Auth::login($user);
 
-        return redirect()->route('alumni.edit', $user)
-            ->with('success', 'Registration successful! Please complete your profile.');
-    }
-
-    /**
-     * Redirect to Google OAuth
-     */
-    public function redirectToGoogle()
-    {
-        return Socialite::driver('google')->redirect();
-    }
-
-    /**
-     * Handle Google OAuth callback
-     */
-    public function handleGoogleCallback()
-    {
-        try {
-            $googleUser = Socialite::driver('google')->user();
-
-            // Check if user exists
-            $user = User::where('email', $googleUser->email)->first();
-
-            if (!$user) {
-                // Format name: First letter capital, rest lowercase
-                $formattedName = ucfirst(strtolower(trim($googleUser->name)));
-                
-                // Create new user
-                $user = User::create([
-                    'name' => $formattedName,
-                    'email' => $googleUser->email,
-                    'password' => bcrypt(Str::random(16)), // Random password since OAuth
-                    'status' => 'active',
-                    'email_verified_at' => now(),
-                ]);
-
-                // Assign alumnus role by default
-                $user->assignRole('alumnus');
-
-                // Send welcome email
-                try {
-                    Mail::to($user->email)->send(new WelcomeMail($user));
-                } catch (\Exception $e) {
-                    \Log::error('Welcome email failed: ' . $e->getMessage());
-                }
-            }
-
-            // Update profile image if available
-            if ($googleUser->avatar && !$user->profile_image) {
-                // You can download and store the avatar if needed
-                // For now, we'll just store the URL
-            }
-
-            Auth::login($user, true); // Remember user
-
-            return redirect()->route('alumni.index')
-                ->with('success', 'Successfully logged in with Google!');
-        } catch (\Exception $e) {
-            \Log::error('Google OAuth error: ' . $e->getMessage());
-            return redirect()->route('login')
-                ->with('error', 'Unable to login with Google. Please try again.');
-        }
+        return redirect()->route('profile.complete');
     }
 
     public function logout(Request $request)
@@ -139,6 +82,47 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/');
+    }
+
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+
+            $user = User::where('email', $googleUser->email)->first();
+
+            if ($user) {
+                Auth::login($user);
+            } else {
+                $user = User::create([
+                    'name' => $googleUser->name,
+                    'email' => $googleUser->email,
+                    'password' => Hash::make(uniqid()),
+                    'profile_image' => $googleUser->avatar,
+                ]);
+
+                // Ensure 'user' role exists
+                Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+                $user->assignRole('user');
+                Auth::login($user);
+
+                Mail::to($user->email)->send(new WelcomeMail($user));
+            }
+
+            if (!$user->canAccessDashboard()) {
+                return redirect()->route('profile.complete');
+            }
+
+            return redirect('/dashboard');
+        } catch (\Exception $e) {
+            return redirect('/login')->withErrors(['error' => 'Unable to login with Google. Please try again.']);
+        }
     }
 }

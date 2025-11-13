@@ -6,11 +6,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: [
-                'resources/views/**',
-                'routes/**',
-                'app/**',
-            ], // Only refresh on specific file changes, not on asset changes
+            refresh: true,
         }),
         tailwindcss(),
     ],

@@ -29,23 +29,4 @@ class Message extends Model
     {
         return $this->belongsTo(User::class, 'to_user_id');
     }
-
-    /**
-     * Scope to get unread messages
-     */
-    public function scopeUnread($query)
-    {
-        return $query->where('is_read', false);
-    }
-
-    /**
-     * Mark message as read
-     */
-    public function markAsRead()
-    {
-        $this->update([
-            'is_read' => true,
-            'read_at' => now(),
-        ]);
-    }
 }

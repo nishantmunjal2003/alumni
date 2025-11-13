@@ -3,100 +3,69 @@
 @section('title', 'Edit Profile')
 
 @section('content')
-<div class="bg-white rounded-lg shadow-md p-8">
+<div class="max-w-2xl mx-auto">
     <h1 class="text-3xl font-bold mb-6">Edit Profile</h1>
-
-    <form action="{{ route('alumni.update', $alumni) }}" method="POST" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('alumni.update', $user->id) }}" enctype="multipart/form-data" class="bg-white shadow rounded-lg p-6">
         @csrf
         @method('PUT')
-
-        <div class="mb-4">
-            <label for="name" class="block text-gray-700 font-semibold mb-2">Full Name *</label>
-            <input type="text" name="name" id="name" value="{{ old('name', $alumni->name) }}" required
-                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-        </div>
-
-        <div class="mb-4">
-            <label for="email" class="block text-gray-700 font-semibold mb-2">Email *</label>
-            <input type="email" name="email" id="email" value="{{ old('email', $alumni->email) }}" required
-                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-        </div>
-
-        <div class="mb-4">
-            <label for="phone" class="block text-gray-700 font-semibold mb-2">Phone</label>
-            <input type="text" name="phone" id="phone" value="{{ old('phone', $alumni->phone) }}"
-                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        
+        <div class="space-y-4">
             <div>
-                <label for="graduation_year" class="block text-gray-700 font-semibold mb-2">Graduation Year</label>
-                <select name="graduation_year" id="graduation_year" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
-                    <option value="">Select Year</option>
-                    @for($year = date('Y'); $year >= 2004; $year--)
-                        <option value="{{ $year }}" {{ old('graduation_year', $alumni->graduation_year) == $year ? 'selected' : '' }}>
-                            {{ $year }}
-                        </option>
-                    @endfor
-                </select>
+                <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             </div>
-
+            
             <div>
-                <label for="major" class="block text-gray-700 font-semibold mb-2">Major</label>
-                <select name="major" id="major" class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
-                    <option value="">Select Major</option>
-                    <option value="B.Tech CSE" {{ old('major', $alumni->major) == 'B.Tech CSE' ? 'selected' : '' }}>B.Tech CSE</option>
-                    <option value="B.Tech ECE" {{ old('major', $alumni->major) == 'B.Tech ECE' ? 'selected' : '' }}>B.Tech ECE</option>
-                    <option value="B.Tech EE" {{ old('major', $alumni->major) == 'B.Tech EE' ? 'selected' : '' }}>B.Tech EE</option>
-                    <option value="B.Tech ME" {{ old('major', $alumni->major) == 'B.Tech ME' ? 'selected' : '' }}>B.Tech ME</option>
-                </select>
+                <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+                <input type="text" name="phone" id="phone" value="{{ old('phone', $user->phone) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            
             <div>
-                <label for="current_position" class="block text-gray-700 font-semibold mb-2">Current Position</label>
-                <input type="text" name="current_position" id="current_position" value="{{ old('current_position', $alumni->current_position) }}"
-                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <label for="graduation_year" class="block text-sm font-medium text-gray-700">Graduation Year</label>
+                <input type="text" name="graduation_year" id="graduation_year" value="{{ old('graduation_year', $user->graduation_year) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             </div>
-
+            
             <div>
-                <label for="company" class="block text-gray-700 font-semibold mb-2">Company</label>
-                <input type="text" name="company" id="company" value="{{ old('company', $alumni->company ?? '') }}" placeholder="Enter company name"
-                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <label for="major" class="block text-sm font-medium text-gray-700">Major</label>
+                <input type="text" name="major" id="major" value="{{ old('major', $user->major) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            
+            <div>
+                <label for="current_position" class="block text-sm font-medium text-gray-700">Current Position</label>
+                <input type="text" name="current_position" id="current_position" value="{{ old('current_position', $user->current_position) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            
+            <div>
+                <label for="company" class="block text-sm font-medium text-gray-700">Company</label>
+                <input type="text" name="company" id="company" value="{{ old('company', $user->company) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            
+            <div>
+                <label for="linkedin_url" class="block text-sm font-medium text-gray-700">LinkedIn URL</label>
+                <input type="url" name="linkedin_url" id="linkedin_url" value="{{ old('linkedin_url', $user->linkedin_url) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            
+            <div>
+                <label for="bio" class="block text-sm font-medium text-gray-700">Bio</label>
+                <textarea name="bio" id="bio" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('bio', $user->bio) }}</textarea>
+            </div>
+            
+            <div>
+                <label for="profile_image" class="block text-sm font-medium text-gray-700">Profile Image</label>
+                <input type="file" name="profile_image" id="profile_image" accept="image/*" class="mt-1 block w-full">
+                @if($user->profile_image)
+                    <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Current profile" class="mt-2 w-32 h-32 rounded-full">
+                @endif
             </div>
         </div>
-
-        <div class="mb-4">
-            <label for="linkedin_url" class="block text-gray-700 font-semibold mb-2">LinkedIn URL</label>
-            <input type="url" name="linkedin_url" id="linkedin_url" value="{{ old('linkedin_url', $alumni->linkedin_url) }}"
-                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-        </div>
-
-        <div class="mb-4">
-            <label for="bio" class="block text-gray-700 font-semibold mb-2">Bio</label>
-            <textarea name="bio" id="bio" rows="4"
-                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">{{ old('bio', $alumni->bio) }}</textarea>
-        </div>
-
-        <div class="mb-4">
-            <label for="profile_image" class="block text-gray-700 font-semibold mb-2">Profile Image</label>
-            @if($alumni->profile_image)
-                <div class="mb-2">
-                    <img src="{{ asset('storage/' . $alumni->profile_image) }}" alt="Current Profile" class="w-32 h-32 rounded-full object-cover">
-                </div>
-            @endif
-            <input type="file" name="profile_image" id="profile_image" accept="image/*"
-                class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-        </div>
-
-        <div class="flex items-center space-x-4">
-            <button type="submit" class="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700">
-                Update Profile
-            </button>
-            <a href="{{ route('alumni.show', $alumni) }}" class="text-gray-600 hover:underline">Cancel</a>
+        
+        <div class="mt-6">
+            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Update Profile</button>
         </div>
     </form>
 </div>
 @endsection
+
+
+
 

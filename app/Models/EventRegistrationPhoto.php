@@ -10,10 +10,9 @@ class EventRegistrationPhoto extends Model
     protected $fillable = [
         'event_registration_id',
         'photo_path',
-        'caption',
     ];
 
-    public function registration(): BelongsTo
+    public function eventRegistration(): BelongsTo
     {
         return $this->belongsTo(EventRegistration::class);
     }

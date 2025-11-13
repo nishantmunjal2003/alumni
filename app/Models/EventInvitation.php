@@ -20,17 +20,11 @@ class EventInvitation extends Model
         'viewed_at' => 'datetime',
     ];
 
-    /**
-     * Get the event
-     */
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
     }
 
-    /**
-     * Get the user
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
