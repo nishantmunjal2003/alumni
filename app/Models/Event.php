@@ -13,21 +13,24 @@ class Event extends Model
         'title',
         'description',
         'image',
-        'event_date',
-        'location',
-        'latitude',
-        'longitude',
+        'event_start_date',
+        'event_end_date',
+        'google_maps_link',
         'venue',
         'status',
         'target_graduation_years',
         'invites_sent',
     ];
 
-    protected $casts = [
-        'event_date' => 'datetime',
-        'target_graduation_years' => 'array',
-        'invites_sent' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'event_start_date' => 'datetime',
+            'event_end_date' => 'datetime',
+            'target_graduation_years' => 'array',
+            'invites_sent' => 'boolean',
+        ];
+    }
 
     public function creator(): BelongsTo
     {

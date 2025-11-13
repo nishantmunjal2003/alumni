@@ -17,30 +17,41 @@ class ProfileCompletionMiddleware
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 
-        // Allow access to profile completion page and logout
-        if ($request->routeIs('profile.*') || $request->routeIs('logout')) {
+        // Allow access to profile completion page, profile edit (if approved), and logout
+        if ($request->routeIs('profile.complete') || $request->routeIs('profile.store') || $request->routeIs('logout')) {
             return $next($request);
         }
 
-        // Check if profile is blocked
-        if ($user->isProfileBlocked()) {
-            auth()->logout();
-            return redirect()->route('login')
-                ->withErrors(['error' => 'Your account has been blocked by the administrator. Please contact support.']);
+        // Allow access to profile edit if user can access dashboard
+        if ($request->routeIs('profile.edit') || $request->routeIs('profile.update')) {
+            if ($user->canAccessDashboard()) {
+                return $next($request);
+            }
         }
 
-        // Check if profile is not completed or not approved
-        if (!$user->canAccessDashboard()) {
+        // Admins and managers bypass profile completion checks
+        if ($user->hasRole('admin') || $user->hasRole('manager')) {
+            return $next($request);
+        }
+
+        // Check if profile is blocked or user is inactive
+        if ($user->isProfileBlocked() || $user->status === 'inactive') {
+            auth()->logout();
+
+            return redirect()->route('login')
+                ->withErrors(['error' => 'Your account has been deactivated. Please contact support if you believe this is an error.']);
+        }
+
+        // Check if profile is not completed
+        if (! $user->canAccessDashboard()) {
             return redirect()->route('profile.complete')
-                ->with('warning', 'Please complete your profile and wait for admin approval to access the dashboard.');
+                ->with('warning', 'Please complete your profile to access the dashboard.');
         }
 
         return $next($request);
     }
 }
-
-

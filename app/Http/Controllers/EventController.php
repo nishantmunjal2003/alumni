@@ -2,21 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EventInvitationMail;
 use App\Models\Event;
 use App\Models\EventInvitation;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use App\Mail\EventInvitationMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class EventController extends Controller
 {
     public function index()
     {
-        $events = Event::where('status', 'published')
-            ->orderBy('event_date', 'asc')
-            ->paginate(12);
+        $query = Event::where('status', 'published')
+            ->where('event_start_date', '>=', now())
+            ->orderBy('event_start_date', 'asc');
+
+        if (auth()->check()) {
+            $query->with(['registrations' => function ($q) {
+                $q->where('user_id', auth()->id());
+            }]);
+        }
+
+        $events = $query->paginate(12);
 
         return view('events.index', compact('events'));
     }
@@ -25,12 +33,14 @@ class EventController extends Controller
     {
         $event = Event::with(['creator', 'registrations.user'])->findOrFail($id);
         $isRegistered = auth()->check() && $event->registrations()->where('user_id', auth()->id())->exists();
+
         return view('events.show', compact('event', 'isRegistered'));
     }
 
     public function adminIndex()
     {
         $events = Event::with('creator')->orderBy('created_at', 'desc')->paginate(20);
+
         return view('admin.events.index', compact('events'));
     }
 
@@ -45,10 +55,9 @@ class EventController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'image' => 'nullable|image|max:2048',
-            'event_date' => 'required|date|after:today',
-            'location' => 'required|string|max:255',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
+            'event_start_date' => 'required|date|after_or_equal:today',
+            'event_end_date' => 'nullable|date|after:event_start_date',
+            'google_maps_link' => 'required|url|max:500',
             'venue' => 'required|string|max:255',
             'status' => 'required|in:draft,published',
             'target_graduation_years' => 'nullable|array',
@@ -71,6 +80,7 @@ class EventController extends Controller
     public function edit($id)
     {
         $event = Event::findOrFail($id);
+
         return view('admin.events.edit', compact('event'));
     }
 
@@ -82,10 +92,9 @@ class EventController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'image' => 'nullable|image|max:2048',
-            'event_date' => 'required|date',
-            'location' => 'required|string|max:255',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
+            'event_start_date' => 'required|date|after_or_equal:today',
+            'event_end_date' => 'nullable|date|after:event_start_date',
+            'google_maps_link' => 'required|url|max:500',
             'venue' => 'required|string|max:255',
             'status' => 'required|in:draft,published',
             'target_graduation_years' => 'nullable|array',
@@ -100,7 +109,7 @@ class EventController extends Controller
 
         $event->update($validated);
 
-        if ($request->has('target_graduation_years') && $request->status === 'published' && !$event->invites_sent) {
+        if ($request->has('target_graduation_years') && $request->status === 'published' && ! $event->invites_sent) {
             $this->sendInvitations($event);
         }
 
@@ -110,7 +119,7 @@ class EventController extends Controller
     public function destroy($id)
     {
         $event = Event::findOrFail($id);
-        
+
         if ($event->image) {
             Storage::disk('public')->delete($event->image);
         }
@@ -124,6 +133,7 @@ class EventController extends Controller
     {
         $event = Event::findOrFail($id);
         $this->sendInvitations($event);
+
         return back()->with('success', 'Invitations resent successfully!');
     }
 
@@ -134,7 +144,7 @@ class EventController extends Controller
         }
 
         $targetYears = $event->target_graduation_years ?? [];
-        
+
         if (empty($targetYears)) {
             return;
         }

@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WelcomeMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Laravel\Socialite\Facades\Socialite;
-use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Laravel\Socialite\Facades\Socialite;
 use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
@@ -28,11 +29,21 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
             $user = Auth::user();
-            
-            if (!$user->canAccessDashboard()) {
+
+            // Admins go directly to admin dashboard
+            if ($user->hasRole('admin')) {
+                return redirect()->intended('/admin');
+            }
+
+            // Managers go directly to manager dashboard
+            if ($user->hasRole('manager')) {
+                return redirect()->intended('/manager');
+            }
+
+            if (! $user->canAccessDashboard()) {
                 return redirect()->route('profile.complete');
             }
-            
+
             return redirect()->intended('/dashboard');
         }
 
@@ -53,8 +64,6 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
-            'graduation_year' => 'nullable|string|max:10',
-            'major' => 'nullable|string|max:255',
         ]);
 
         $user = User::create([
@@ -62,13 +71,11 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,
-            'graduation_year' => $validated['graduation_year'] ?? null,
-            'major' => $validated['major'] ?? null,
         ]);
 
-        // Ensure 'user' role exists
-        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
-        $user->assignRole('user');
+        // Assign 'alumni' role by default
+        Role::firstOrCreate(['name' => 'alumni', 'guard_name' => 'web']);
+        $user->assignRole('alumni');
 
         Mail::to($user->email)->send(new WelcomeMail($user));
 
@@ -108,21 +115,41 @@ class AuthController extends Controller
                     'profile_image' => $googleUser->avatar,
                 ]);
 
-                // Ensure 'user' role exists
-                Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
-                $user->assignRole('user');
+                // Assign 'alumni' role by default
+                Role::firstOrCreate(['name' => 'alumni', 'guard_name' => 'web']);
+                $user->assignRole('alumni');
                 Auth::login($user);
 
                 Mail::to($user->email)->send(new WelcomeMail($user));
             }
 
-            if (!$user->canAccessDashboard()) {
+            // Admins go directly to admin dashboard
+            if ($user->hasRole('admin')) {
+                return redirect('/admin');
+            }
+
+            // Managers go directly to manager dashboard
+            if ($user->hasRole('manager')) {
+                return redirect('/manager');
+            }
+
+            if (! $user->canAccessDashboard()) {
                 return redirect()->route('profile.complete');
             }
 
             return redirect('/dashboard');
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('Google OAuth connection error: '.$e->getMessage());
+
+            return redirect('/login')->withErrors(['error' => 'Unable to connect to Google. Please check your internet connection and try again.']);
+        } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
+            Log::error('Google OAuth state error: '.$e->getMessage());
+
+            return redirect('/login')->withErrors(['error' => 'Session expired. Please try logging in again.']);
         } catch (\Exception $e) {
-            return redirect('/login')->withErrors(['error' => 'Unable to login with Google. Please try again.']);
+            Log::error('Google OAuth error: '.$e->getMessage());
+
+            return redirect('/login')->withErrors(['error' => 'Unable to login with Google: '.$e->getMessage()]);
         }
     }
 }

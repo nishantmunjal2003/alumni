@@ -11,7 +11,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -20,6 +20,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'enrollment_no',
         'email',
         'password',
         'phone',
@@ -50,6 +51,7 @@ class User extends Authenticatable
         'status',
         'profile_completed',
         'profile_status',
+        'profile_submitted_at',
     ];
 
     /**
@@ -75,6 +77,7 @@ class User extends Authenticatable
             'profile_completed' => 'boolean',
             'date_of_birth' => 'date',
             'wedding_anniversary_date' => 'date',
+            'profile_submitted_at' => 'datetime',
         ];
     }
 
@@ -111,9 +114,10 @@ class User extends Authenticatable
 
     public function batchmates()
     {
-        if (!$this->graduation_year) {
+        if (! $this->graduation_year) {
             return User::whereRaw('1 = 0'); // Return empty query if no graduation year
         }
+
         return User::where('graduation_year', $this->graduation_year)
             ->where('id', '!=', $this->id)
             ->where('status', 'active');
@@ -125,14 +129,13 @@ class User extends Authenticatable
     public function isProfileComplete(): bool
     {
         return $this->profile_completed &&
+            $this->enrollment_no &&
             $this->passing_year &&
             $this->course &&
-            $this->proof_document &&
             $this->residence_address &&
             $this->residence_city &&
             $this->residence_state &&
             $this->residence_country &&
-            $this->profile_image &&
             $this->company &&
             $this->designation &&
             $this->employment_type &&
@@ -161,9 +164,47 @@ class User extends Authenticatable
 
     /**
      * Check if user can access dashboard.
+     * Users can access dashboard immediately after profile completion.
+     * Admins and managers can always access dashboard without profile completion.
      */
     public function canAccessDashboard(): bool
     {
-        return $this->isProfileComplete() && $this->isProfileApproved();
+        // Admins and managers can always access dashboard
+        if ($this->hasRole('admin') || $this->hasRole('manager')) {
+            return true;
+        }
+
+        return $this->isProfileComplete() && ! $this->isProfileBlocked();
+    }
+
+    /**
+     * Check if account should be deactivated due to missing proof document.
+     */
+    public function shouldBeDeactivatedForMissingProof(): bool
+    {
+        if ($this->proof_document) {
+            return false;
+        }
+
+        if (! $this->profile_submitted_at) {
+            return false;
+        }
+
+        return $this->profile_submitted_at->copy()->addDays(7)->isPast();
+    }
+
+    /**
+     * Get days remaining before deactivation if proof is missing.
+     */
+    public function getDaysUntilDeactivation(): ?int
+    {
+        if ($this->proof_document || ! $this->profile_submitted_at) {
+            return null;
+        }
+
+        $deactivationDate = $this->profile_submitted_at->copy()->addDays(7);
+        $daysRemaining = now()->diffInDays($deactivationDate, false);
+
+        return $daysRemaining > 0 ? $daysRemaining : 0;
     }
 }

@@ -11,6 +11,7 @@ class CampaignController extends Controller
     public function index()
     {
         $campaigns = Campaign::where('status', 'published')
+            ->where('end_date', '>=', now())
             ->orderBy('start_date', 'desc')
             ->paginate(12);
 
@@ -20,12 +21,14 @@ class CampaignController extends Controller
     public function show($id)
     {
         $campaign = Campaign::with('creator')->findOrFail($id);
+
         return view('campaigns.show', compact('campaign'));
     }
 
     public function adminIndex()
     {
         $campaigns = Campaign::with('creator')->orderBy('created_at', 'desc')->paginate(20);
+
         return view('admin.campaigns.index', compact('campaigns'));
     }
 
@@ -58,6 +61,7 @@ class CampaignController extends Controller
     public function edit($id)
     {
         $campaign = Campaign::findOrFail($id);
+
         return view('admin.campaigns.edit', compact('campaign'));
     }
 
@@ -89,7 +93,7 @@ class CampaignController extends Controller
     public function destroy($id)
     {
         $campaign = Campaign::findOrFail($id);
-        
+
         if ($campaign->image) {
             Storage::disk('public')->delete($campaign->image);
         }

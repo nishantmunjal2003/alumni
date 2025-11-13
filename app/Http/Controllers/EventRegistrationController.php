@@ -151,12 +151,64 @@ class EventRegistrationController extends Controller
         return redirect()->route('events.show', $event->id)->with('success', 'Registration cancelled successfully!');
     }
 
-    public function fellows(Event $event)
+    public function fellows(Request $request, Event $event)
     {
-        $registrations = EventRegistration::where('event_id', $event->id)
-            ->with(['user', 'photos'])
-            ->get();
+        $query = EventRegistration::where('event_id', $event->id)
+            ->with(['user', 'photos']);
 
-        return view('events.fellows', compact('event', 'registrations'));
+        // Apply search filter if provided
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('major', 'like', "%{$search}%")
+                        ->orWhere('company', 'like', "%{$search}%")
+                        ->orWhere('current_position', 'like', "%{$search}%")
+                        ->orWhere('passing_year', 'like', "%{$search}%");
+                })->orWhere('coming_from_city', 'like', "%{$search}%");
+            });
+        }
+
+        $registrations = $query->get();
+
+        // Get current user's passing year
+        $currentUserPassingYear = auth()->user()->passing_year;
+
+        // Group registrations by passing year
+        $groupedRegistrations = $registrations->groupBy(function ($registration) {
+            return $registration->user->passing_year ?? 'Other';
+        });
+
+        // Get sorted keys: current user's passing year first, then others by year descending
+        $keys = $groupedRegistrations->keys()->toArray();
+
+        usort($keys, function ($a, $b) {
+            // Handle 'Other' group - always put it last
+            if ($a === 'Other') {
+                return 1;
+            }
+            if ($b === 'Other') {
+                return -1;
+            }
+
+            // Sort numeric years descending
+            return (int) $b <=> (int) $a;
+        });
+
+        // Move current user's passing year to the top if it exists
+        if ($currentUserPassingYear && in_array($currentUserPassingYear, $keys)) {
+            $keys = array_values(array_diff($keys, [$currentUserPassingYear]));
+            array_unshift($keys, $currentUserPassingYear);
+        }
+
+        // Build sorted groups array while preserving Eloquent models
+        $sortedGroups = [];
+        foreach ($keys as $key) {
+            $sortedGroups[$key] = $groupedRegistrations[$key];
+        }
+
+        return view('events.fellows', compact('event', 'registrations', 'sortedGroups', 'currentUserPassingYear'));
     }
 }

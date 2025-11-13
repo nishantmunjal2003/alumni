@@ -30,6 +30,9 @@
                         @if(auth()->user()->hasRole('admin'))
                             <a href="{{ route('admin.dashboard') }}" class="text-gray-700 hover:text-indigo-600">Admin</a>
                         @endif
+                        @if(auth()->user()->hasRole('manager'))
+                            <a href="{{ route('manager.dashboard') }}" class="text-gray-700 hover:text-indigo-600">Manager</a>
+                        @endif
                         <form method="POST" action="{{ route('logout') }}" class="inline">
                             @csrf
                             <button type="submit" class="text-gray-700 hover:text-indigo-600">Logout</button>

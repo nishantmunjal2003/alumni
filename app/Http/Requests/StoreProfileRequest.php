@@ -21,15 +21,12 @@ class StoreProfileRequest extends FormRequest
      */
     public function rules(): array
     {
-        $user = $this->user();
-        $hasProofDocument = $user && $user->proof_document;
-        $hasProfileImage = $user && $user->profile_image;
-
         return [
             // Alumni Details
+            'enrollment_no' => 'required|string|max:50',
             'passing_year' => 'required|string|max:10',
-            'course' => 'required|in:B.Tech CSE,B.Tech ECE,B.Tech EE,B.Tech ME',
-            'proof_document' => ($hasProofDocument ? 'nullable' : 'required').'|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
+            'course' => 'required|string|max:255',
+            'proof_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
             'residence_address' => 'required|string|max:500',
             'residence_city' => 'required|string|max:255',
             'residence_state' => 'required|string|max:255',
@@ -37,7 +34,7 @@ class StoreProfileRequest extends FormRequest
             'aadhar_number' => 'nullable|string|max:12|regex:/^[0-9]{12}$/',
             'date_of_birth' => 'nullable|date|before:today',
             'wedding_anniversary_date' => 'nullable|date|before_or_equal:today',
-            'profile_image' => ($hasProfileImage ? 'nullable' : 'required').'|image|mimes:jpg,jpeg,png|max:2048',
+            'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
 
             // Employment Details
             'company' => 'required|string|max:255',
@@ -61,9 +58,9 @@ class StoreProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'enrollment_no.required' => 'Enrollment No. is required.',
             'passing_year.required' => 'Passing year is required.',
             'course.required' => 'Course/Major is required.',
-            'course.in' => 'Please select a valid course.',
             'residence_address.required' => 'Current residence address is required.',
             'residence_city.required' => 'City is required.',
             'residence_state.required' => 'State is required.',

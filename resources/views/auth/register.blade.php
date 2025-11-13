@@ -43,14 +43,6 @@
                     <label for="phone" class="block text-sm font-medium text-gray-700">Phone (Optional)</label>
                     <input id="phone" name="phone" type="text" class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value="{{ old('phone') }}">
                 </div>
-                <div>
-                    <label for="graduation_year" class="block text-sm font-medium text-gray-700">Graduation Year (Optional)</label>
-                    <input id="graduation_year" name="graduation_year" type="text" class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value="{{ old('graduation_year') }}">
-                </div>
-                <div>
-                    <label for="major" class="block text-sm font-medium text-gray-700">Major (Optional)</label>
-                    <input id="major" name="major" type="text" class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value="{{ old('major') }}">
-                </div>
             </div>
 
             <div>

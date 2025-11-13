@@ -17,9 +17,16 @@
         
         <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
             <h2 style="margin-top: 0; color: #667eea;">{{ $event->title }}</h2>
-            <p><strong>Date:</strong> {{ $event->event_date->format('F d, Y h:i A') }}</p>
+            <p><strong>Start Date:</strong> {{ ($event->event_start_date ?? $event->event_date ?? null)?->format('F d, Y h:i A') }}</p>
+            @if($event->event_end_date)
+                <p><strong>End Date:</strong> {{ $event->event_end_date->format('F d, Y h:i A') }}</p>
+            @endif
             <p><strong>Venue:</strong> {{ $event->venue }}</p>
-            <p><strong>Location:</strong> {{ $event->location }}</p>
+            @if($event->google_maps_link)
+                <p><strong>Location:</strong> <a href="{{ $event->google_maps_link }}" style="color: #667eea;">View on Google Maps</a></p>
+            @elseif(isset($event->location))
+                <p><strong>Location:</strong> {{ $event->location }}</p>
+            @endif
             <p>{{ $event->description }}</p>
         </div>
         
