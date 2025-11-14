@@ -3,13 +3,18 @@
 @section('title', 'View Profile - ' . $user->name)
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
-    <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold">Profile Details</h1>
-        <a href="{{ route('admin.profiles.pending') }}" class="text-indigo-600 hover:text-indigo-800">Back to Pending Profiles</a>
+<div class="max-w-4xl mx-auto space-y-4 sm:space-y-6 px-4 sm:px-0">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+        <h1 class="text-2xl sm:text-3xl font-bold">Profile Details</h1>
+        <a href="{{ route('admin.profiles.pending') }}" class="text-sm sm:text-base text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Back to Pending Profiles
+        </a>
     </div>
 
-    <div class="bg-white shadow rounded-lg p-6">
+    <div class="bg-white shadow rounded-lg p-4 sm:p-6">
         <!-- Alumni Details -->
         <div class="border-b pb-6 mb-6">
             <h2 class="text-2xl font-semibold mb-4">Alumni Details</h2>
@@ -85,7 +90,17 @@
                 @if($user->profile_image)
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Profile Photo</label>
-                        <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile Photo" class="mt-2 h-32 w-32 rounded-full object-cover">
+                        <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile Photo" class="mt-2 h-32 w-32 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="mt-2 h-32 w-32 rounded-full bg-indigo-100 flex items-center justify-center hidden">
+                            <span class="text-indigo-600 font-semibold text-2xl">{{ getUserInitials($user->name) }}</span>
+                        </div>
+                    </div>
+                @else
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Profile Photo</label>
+                        <div class="mt-2 h-32 w-32 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <span class="text-indigo-600 font-semibold text-2xl">{{ getUserInitials($user->name) }}</span>
+                        </div>
                     </div>
                 @endif
             </div>
@@ -142,17 +157,34 @@
             </div>
         </div>
 
+        <!-- Bio Section -->
+        @if($user->bio)
+        <div class="border-b pb-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Bio</h2>
+            <p class="text-gray-900 whitespace-pre-wrap">{{ $user->bio }}</p>
+        </div>
+        @endif
+
         <!-- Actions -->
-        <div class="flex justify-end gap-4">
-            <form method="POST" action="{{ route('admin.profiles.approve', $user->id) }}" class="inline">
+        <div class="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-6 border-t">
+            <a href="{{ route('admin.profiles.pending') }}" class="w-full sm:w-auto text-center bg-gray-200 text-gray-700 px-6 py-2.5 rounded-md hover:bg-gray-300 transition-colors touch-manipulation">
+                Back to List
+            </a>
+            <a href="{{ route('admin.users.edit', $user->id) }}" class="w-full sm:w-auto text-center bg-indigo-600 text-white px-6 py-2.5 rounded-md hover:bg-indigo-700 transition-colors touch-manipulation inline-flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit Profile
+            </a>
+            <form method="POST" action="{{ route('admin.profiles.approve', $user->id) }}" class="w-full sm:w-auto">
                 @csrf
-                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700" onclick="return confirm('Are you sure you want to approve this profile?')">
+                <button type="submit" class="w-full sm:w-auto bg-green-600 text-white px-6 py-2.5 rounded-md hover:bg-green-700 transition-colors touch-manipulation" onclick="return confirm('Are you sure you want to approve this profile?')">
                     Approve Profile
                 </button>
             </form>
-            <form method="POST" action="{{ route('admin.profiles.block', $user->id) }}" class="inline">
+            <form method="POST" action="{{ route('admin.profiles.block', $user->id) }}" class="w-full sm:w-auto">
                 @csrf
-                <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700" onclick="return confirm('Are you sure you want to block this profile?')">
+                <button type="submit" class="w-full sm:w-auto bg-red-600 text-white px-6 py-2.5 rounded-md hover:bg-red-700 transition-colors touch-manipulation" onclick="return confirm('Are you sure you want to block this profile?')">
                     Block Profile
                 </button>
             </form>

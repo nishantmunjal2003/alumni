@@ -23,7 +23,7 @@ class StoreProfileRequest extends FormRequest
     {
         return [
             // Alumni Details
-            'enrollment_no' => 'required|string|max:50',
+            'enrollment_no' => 'nullable|string|max:50',
             'passing_year' => 'required|string|max:10',
             'course' => 'required|string|max:255',
             'proof_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
@@ -58,7 +58,6 @@ class StoreProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'enrollment_no.required' => 'Enrollment No. is required.',
             'passing_year.required' => 'Passing year is required.',
             'course.required' => 'Course/Major is required.',
             'residence_address.required' => 'Current residence address is required.',

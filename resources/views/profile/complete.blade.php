@@ -57,8 +57,8 @@
                         </div>
 
                         <div>
-                            <label for="enrollment_no" class="block text-sm font-medium text-gray-700">Enrollment No. <span class="text-red-500">*</span></label>
-                            <input type="text" name="enrollment_no" id="enrollment_no" value="{{ old('enrollment_no', $user->enrollment_no) }}" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label for="enrollment_no" class="block text-sm font-medium text-gray-700">Enrollment No. <span class="text-gray-500 font-normal">(Optional)</span></label>
+                            <input type="text" name="enrollment_no" id="enrollment_no" value="{{ old('enrollment_no', $user->enrollment_no) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             @error('enrollment_no')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror

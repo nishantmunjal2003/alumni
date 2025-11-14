@@ -67,7 +67,7 @@ class AuthController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
+            'name' => ucwords(strtolower(trim($validated['name'])), " \t\r\n\f\v"),
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'] ?? null,
@@ -109,7 +109,7 @@ class AuthController extends Controller
                 Auth::login($user);
             } else {
                 $user = User::create([
-                    'name' => $googleUser->name,
+                    'name' => ucwords(strtolower(trim($googleUser->name)), " \t\r\n\f\v"),
                     'email' => $googleUser->email,
                     'password' => Hash::make(uniqid()),
                     'profile_image' => $googleUser->avatar,

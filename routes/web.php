@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlumniController;
+use App\Http\Controllers\AlumniMapController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\EventController;
@@ -71,6 +72,8 @@ Route::middleware(['auth'])->group(function () {
         // Alumni routes
         Route::get('/dashboard', [AlumniController::class, 'dashboard'])->name('dashboard');
         Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
+        Route::get('/alumni/map', [AlumniMapController::class, 'publicMap'])->name('alumni.map');
+        Route::get('/alumni/map/locations', [AlumniMapController::class, 'getPublicAlumniLocations'])->name('alumni.map.locations');
         Route::get('/alumni/{id}', [AlumniController::class, 'show'])->name('alumni.show');
         Route::get('/alumni/{id}/edit', [AlumniController::class, 'edit'])->name('alumni.edit');
         Route::put('/alumni/{id}', [AlumniController::class, 'update'])->name('alumni.update');
@@ -119,18 +122,33 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/events/{id}/resend-invites', [EventController::class, 'resendInvites'])->name('events.resend-invites');
 
     // Campaign management
-    Route::get('/campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+    Route::get('/campaigns', [CampaignController::class, 'adminIndex'])->name('campaigns.index');
     Route::get('/campaigns/create', [CampaignController::class, 'create'])->name('campaigns.create');
     Route::post('/campaigns', [CampaignController::class, 'store'])->name('campaigns.store');
     Route::get('/campaigns/{id}/edit', [CampaignController::class, 'edit'])->name('campaigns.edit');
     Route::put('/campaigns/{id}', [CampaignController::class, 'update'])->name('campaigns.update');
     Route::delete('/campaigns/{id}', [CampaignController::class, 'destroy'])->name('campaigns.destroy');
+    Route::get('/campaigns/{id}/email', [CampaignController::class, 'showBulkEmailForm'])->name('campaigns.email');
+    Route::post('/campaigns/{id}/email', [CampaignController::class, 'sendBulkEmail'])->name('campaigns.email.send');
 
     // Profile approval management
     Route::get('/profiles/pending', [AdminController::class, 'pendingProfiles'])->name('profiles.pending');
     Route::get('/profiles/{user}', [AdminController::class, 'viewProfile'])->name('profiles.view');
     Route::post('/profiles/{user}/approve', [AdminController::class, 'approveProfile'])->name('profiles.approve');
     Route::post('/profiles/{user}/block', [AdminController::class, 'blockProfile'])->name('profiles.block');
+
+    // Alumni directory management
+    Route::get('/alumni', [AdminController::class, 'alumniDirectory'])->name('alumni.index');
+    Route::get('/alumni/map', [AlumniMapController::class, 'adminMap'])->name('alumni.map');
+    Route::get('/alumni/map/locations', [AlumniMapController::class, 'getAlumniLocations'])->name('alumni.map.locations');
+    Route::get('/alumni/export/excel', [AdminController::class, 'exportAlumni'])->name('alumni.export');
+    Route::get('/alumni/{user}', [AdminController::class, 'viewAlumni'])->name('alumni.view');
+    
+    // Email functionality
+    Route::get('/alumni/{user}/email', [AdminController::class, 'showEmailForm'])->name('alumni.email');
+    Route::post('/alumni/{user}/email', [AdminController::class, 'sendEmailToAlumni'])->name('alumni.email.send');
+    Route::get('/alumni/email/bulk', [AdminController::class, 'showBulkEmailForm'])->name('alumni.email.bulk');
+    Route::post('/alumni/email/bulk', [AdminController::class, 'sendBulkEmail'])->name('alumni.email.bulk.send');
 });
 
 // Manager routes

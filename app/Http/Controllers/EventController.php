@@ -33,8 +33,13 @@ class EventController extends Controller
     {
         $event = Event::with(['creator', 'registrations.user'])->findOrFail($id);
         $isRegistered = auth()->check() && $event->registrations()->where('user_id', auth()->id())->exists();
+        $registration = null;
 
-        return view('events.show', compact('event', 'isRegistered'));
+        if ($isRegistered) {
+            $registration = $event->registrations()->where('user_id', auth()->id())->first();
+        }
+
+        return view('events.show', compact('event', 'isRegistered', 'registration'));
     }
 
     public function adminIndex()

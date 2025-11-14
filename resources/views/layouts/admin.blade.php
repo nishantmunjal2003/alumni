@@ -28,6 +28,12 @@
                         <a href="{{ route('admin.events.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.events.*') ? 'font-semibold' : '' }}">Events</a>
                         <a href="{{ route('admin.campaigns.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.campaigns.*') ? 'font-semibold' : '' }}">Campaigns</a>
                         <a href="{{ route('admin.profiles.pending') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.profiles.*') ? 'font-semibold' : '' }}">Pending Profiles</a>
+                        <a href="{{ route('admin.alumni.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.alumni.*') && !request()->routeIs('admin.alumni.map*') ? 'font-semibold' : '' }}">Alumni Directory</a>
+                        <a href="{{ route('admin.alumni.map') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.alumni.map*') ? 'font-semibold' : '' }}">Alumni Map</a>
+                        <a href="{{ route('messages.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('messages.*') ? 'font-semibold' : '' }} relative">
+                            Messages
+                            <span id="admin-unread-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
+                        </a>
                         
                         <!-- User Menu -->
                         <div class="flex items-center gap-3 pl-4 border-l border-purple-500">
@@ -65,6 +71,12 @@
                         <a href="{{ route('admin.events.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.events.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Events</a>
                         <a href="{{ route('admin.campaigns.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.campaigns.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Campaigns</a>
                         <a href="{{ route('admin.profiles.pending') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.profiles.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Pending Profiles</a>
+                        <a href="{{ route('admin.alumni.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.alumni.*') && !request()->routeIs('admin.alumni.map*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Alumni Directory</a>
+                        <a href="{{ route('admin.alumni.map') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.alumni.map*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Alumni Map</a>
+                        <a href="{{ route('messages.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('messages.*') ? 'font-semibold bg-purple-800 rounded' : '' }} relative">
+                            Messages
+                            <span id="admin-mobile-unread-badge" class="hidden absolute right-2 top-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
+                        </a>
                         <div class="border-t border-purple-500 pt-2 mt-2">
                             <div class="text-white text-sm px-2 py-1">{{ auth()->user()->name }}</div>
                             <a href="{{ route('dashboard') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 flex items-center gap-2">
@@ -101,17 +113,27 @@
     </main>
 
     <script>
-        // Update unread message count (if needed for admin)
+        // Update unread message count for admin
         function updateUnreadCount() {
             fetch('{{ route("messages.unread.count") }}')
                 .then(response => response.json())
                 .then(data => {
-                    const badge = document.getElementById('unread-badge');
+                    // Desktop badge
+                    const badge = document.getElementById('admin-unread-badge');
                     if (badge && data.count > 0) {
                         badge.textContent = data.count;
                         badge.classList.remove('hidden');
                     } else if (badge) {
                         badge.classList.add('hidden');
+                    }
+                    
+                    // Mobile badge
+                    const mobileBadge = document.getElementById('admin-mobile-unread-badge');
+                    if (mobileBadge && data.count > 0) {
+                        mobileBadge.textContent = data.count;
+                        mobileBadge.classList.remove('hidden');
+                    } else if (mobileBadge) {
+                        mobileBadge.classList.add('hidden');
                     }
                 });
         }

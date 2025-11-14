@@ -17,7 +17,7 @@ class AlumniController extends Controller
     public function dashboard()
     {
         $user = auth()->user();
-        $batchmates = User::where('graduation_year', $user->graduation_year)
+        $batchmates = User::where('passing_year', $user->passing_year)
             ->where('id', '!=', $user->id)
             ->where('status', 'active')
             ->whereDoesntHave('roles', function ($query) {
@@ -32,7 +32,11 @@ class AlumniController extends Controller
             ->limit(5)
             ->get();
 
-        return view('alumni.dashboard', compact('batchmates', 'upcomingEvents'));
+        // Check for missing optional fields
+        $missingEnrollmentNo = !$user->enrollment_no;
+        $missingProofDocument = !$user->proof_document;
+
+        return view('alumni.dashboard', compact('batchmates', 'upcomingEvents', 'missingEnrollmentNo', 'missingProofDocument'));
     }
 
     public function index(Request $request)
@@ -42,23 +46,29 @@ class AlumniController extends Controller
                 $q->where('name', 'admin');
             });
 
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('major', 'like', "%{$search}%")
-                    ->orWhere('company', 'like', "%{$search}%")
-                    ->orWhere('current_position', 'like', "%{$search}%")
-                    ->orWhere('passing_year', 'like', "%{$search}%");
-            });
+        // Only apply search filter if search term is not empty
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('enrollment_no', 'like', "%{$search}%")
+                        ->orWhere('major', 'like', "%{$search}%")
+                        ->orWhere('course', 'like', "%{$search}%")
+                        ->orWhere('company', 'like', "%{$search}%")
+                        ->orWhere('current_position', 'like', "%{$search}%")
+                        ->orWhere('designation', 'like', "%{$search}%")
+                        ->orWhere('passing_year', 'like', "%{$search}%");
+                });
+            }
         }
 
-        if ($request->has('passing_year')) {
+        if ($request->filled('passing_year')) {
             $query->where('passing_year', $request->passing_year);
         }
 
-        $alumni = $query->paginate(12);
+        $alumni = $query->orderBy('name', 'asc')->paginate(12);
 
         if ($request->ajax()) {
             return view('alumni.partials.alumni-list', compact('alumni'))->render();

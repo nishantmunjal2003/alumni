@@ -14,6 +14,7 @@ class Campaign extends Model
         'image',
         'start_date',
         'end_date',
+        'donation_link',
         'status',
     ];
 

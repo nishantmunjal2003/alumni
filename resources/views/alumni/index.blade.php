@@ -20,7 +20,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
-                    <input type="text" name="search" id="search" placeholder="Search by name, email, major, company..." class="pl-11 pr-4 py-3 w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:border-indigo-400 dark:focus:ring-indigo-800 transition-all" value="{{ request('search') }}" autocomplete="off">
+                    <input type="text" name="search" id="search" placeholder="Search by name, email, course, company, designation..." class="pl-11 pr-4 py-3 w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:border-indigo-400 dark:focus:ring-indigo-800 transition-all" value="{{ request('search') }}" autocomplete="off">
                 </div>
                 <div class="relative">
                     <select name="passing_year" id="passing_year" class="w-full px-4 py-3 pr-10 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 dark:focus:border-indigo-400 dark:focus:ring-indigo-800 transition-all appearance-none bg-white dark:bg-gray-700 cursor-pointer">
@@ -67,7 +67,18 @@
 
         isSearching = true;
         const formData = new FormData(document.getElementById('search-form'));
-        const params = new URLSearchParams(formData);
+        const params = new URLSearchParams();
+        
+        // Only add non-empty parameters
+        const searchValue = formData.get('search')?.trim() || '';
+        const passingYearValue = formData.get('passing_year') || '';
+        
+        if (searchValue) {
+            params.append('search', searchValue);
+        }
+        if (passingYearValue) {
+            params.append('passing_year', passingYearValue);
+        }
         
         // Show loading state
         alumniList.innerHTML = '<div class="flex items-center justify-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div><span class="ml-3 text-gray-600 dark:text-gray-400">Searching...</span></div>';

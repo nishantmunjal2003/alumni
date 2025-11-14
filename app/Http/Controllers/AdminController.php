@@ -6,6 +6,7 @@ use App\Models\Campaign;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 class AdminController extends Controller
@@ -158,7 +159,11 @@ class AdminController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('admin.profiles.pending', compact('pendingProfiles'));
+        $totalPendingCount = User::where('profile_status', 'pending')
+            ->where('profile_completed', true)
+            ->count();
+
+        return view('admin.profiles.pending', compact('pendingProfiles', 'totalPendingCount'));
     }
 
     /**
@@ -292,6 +297,243 @@ class AdminController extends Controller
     }
 
     /**
+     * Show alumni directory for admin with search functionality.
+     */
+    public function alumniDirectory(Request $request)
+    {
+        $query = User::whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin');
+        });
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            if (! empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('enrollment_no', 'like', "%{$search}%")
+                        ->orWhere('major', 'like', "%{$search}%")
+                        ->orWhere('course', 'like', "%{$search}%")
+                        ->orWhere('company', 'like', "%{$search}%")
+                        ->orWhere('current_position', 'like', "%{$search}%")
+                        ->orWhere('designation', 'like', "%{$search}%")
+                        ->orWhere('passing_year', 'like', "%{$search}%");
+                });
+            }
+        }
+
+        // Filter by passing year
+        if ($request->filled('passing_year')) {
+            $query->where('passing_year', $request->passing_year);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by profile status
+        if ($request->filled('profile_status')) {
+            $query->where('profile_status', $request->profile_status);
+        }
+
+        // Sorting functionality
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+
+        // Validate sort_by and sort_order
+        $allowedSortFields = ['name', 'passing_year', 'course', 'company'];
+        if (! in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'name';
+        }
+        if (! in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'asc';
+        }
+
+        $query->orderBy($sortBy, $sortOrder);
+
+        $alumni = $query->paginate(20)->appends($request->except('page'));
+
+        // Get total count for display
+        $totalAlumniCount = User::whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin');
+        })->count();
+
+        // Get passing years for filter
+        $passingYears = User::whereNotNull('passing_year')
+            ->whereDoesntHave('roles', function ($q) {
+                $q->where('name', 'admin');
+            })
+            ->distinct()
+            ->orderBy('passing_year', 'desc')
+            ->pluck('passing_year');
+
+        if ($request->ajax()) {
+            return view('admin.alumni.partials.alumni-list', compact('alumni', 'sortBy', 'sortOrder'))->render();
+        }
+
+        return view('admin.alumni.index', compact('alumni', 'passingYears', 'totalAlumniCount', 'sortBy', 'sortOrder'));
+    }
+
+    /**
+     * View a specific alumni profile.
+     */
+    public function viewAlumni(User $user)
+    {
+        return view('admin.alumni.view', compact('user'));
+    }
+
+    /**
+     * Show email compose form for single alumni.
+     */
+    public function showEmailForm(User $user)
+    {
+        return view('admin.alumni.email-form', compact('user'));
+    }
+
+    /**
+     * Send email to a single alumni.
+     */
+    public function sendEmailToAlumni(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+        ]);
+
+        try {
+            Mail::to($user->email)->send(new \App\Mail\AlumniEmail($user, $validated['subject'], $validated['message']));
+
+            return redirect()->route('admin.alumni.view', $user->id)
+                ->with('success', 'Email sent successfully to '.$user->name);
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to send email: '.$e->getMessage()]);
+        }
+    }
+
+    /**
+     * Show email compose form for bulk alumni.
+     */
+    public function showBulkEmailForm(Request $request)
+    {
+        // Start with the exact same base query as alumniDirectory
+        $query = User::whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin');
+        });
+
+        // Apply same filters as directory
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            if (! empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('enrollment_no', 'like', "%{$search}%")
+                        ->orWhere('major', 'like', "%{$search}%")
+                        ->orWhere('course', 'like', "%{$search}%")
+                        ->orWhere('company', 'like', "%{$search}%")
+                        ->orWhere('current_position', 'like', "%{$search}%")
+                        ->orWhere('designation', 'like', "%{$search}%")
+                        ->orWhere('passing_year', 'like', "%{$search}%");
+                });
+            }
+        }
+
+        // Filter by passing year
+        if ($request->filled('passing_year')) {
+            $query->where('passing_year', $request->passing_year);
+        }
+
+        // Filter by status - allow inactive only if explicitly filtered
+        if ($request->filled('status') && $request->status === 'inactive') {
+            $query->where('status', 'inactive');
+        } else {
+            // Default to active if no status filter or filter is 'active'
+            $query->where('status', 'active');
+        }
+
+        // Filter by profile status
+        if ($request->filled('profile_status')) {
+            $query->where('profile_status', $request->profile_status);
+        }
+
+        // Apply same sorting as directory (if provided)
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+
+        // Validate sort_by and sort_order
+        $allowedSortFields = ['name', 'passing_year', 'course', 'company'];
+        if (! in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'name';
+        }
+        if (! in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'asc';
+        }
+
+        $query->orderBy($sortBy, $sortOrder);
+
+        $recipients = $query->get();
+        $recipientCount = $recipients->count();
+        $statusFilter = $request->get('status', 'active');
+
+        return view('admin.alumni.bulk-email-form', compact('recipients', 'recipientCount', 'statusFilter'));
+    }
+
+    /**
+     * Send email to bulk alumni (filtered list).
+     */
+    public function sendBulkEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'recipient_ids' => 'required|array',
+            'recipient_ids.*' => 'exists:users,id',
+            'status_filter' => 'nullable|in:active,inactive',
+        ]);
+
+        try {
+            // Get recipients based on the status filter
+            $recipientsQuery = User::whereIn('id', $validated['recipient_ids'])
+                ->whereDoesntHave('roles', function ($q) {
+                    $q->where('name', 'admin');
+                });
+
+            // Apply status filter if provided, otherwise default to active
+            if (isset($validated['status_filter']) && $validated['status_filter'] === 'inactive') {
+                $recipientsQuery->where('status', 'inactive');
+            } else {
+                $recipientsQuery->where('status', 'active');
+            }
+
+            $recipients = $recipientsQuery->get();
+
+            $sentCount = 0;
+            foreach ($recipients as $recipient) {
+                try {
+                    Mail::to($recipient->email)->send(new \App\Mail\AlumniEmail($recipient, $validated['subject'], $validated['message']));
+                    $sentCount++;
+                } catch (\Exception $e) {
+                    // Log error but continue with other recipients
+                    \Log::error("Failed to send email to {$recipient->email}: ".$e->getMessage());
+                }
+            }
+
+            $statusText = ($validated['status_filter'] ?? 'active') === 'inactive' ? 'inactive' : 'active';
+
+            return redirect()->route('admin.alumni.index')
+                ->with('success', "Email sent successfully to {$sentCount} out of {$recipients->count()} {$statusText} alumni.");
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to send emails: '.$e->getMessage()]);
+        }
+    }
+
+    /**
      * Update alumni data.
      */
     public function updateAlumni(Request $request, User $user)
@@ -329,6 +571,154 @@ class AdminController extends Controller
 
         $user->update($validated);
 
-        return redirect()->route('admin.users.index')->with('success', 'Alumni data updated successfully!');
+        return redirect()->back()->with('success', 'Alumni data updated successfully!');
+    }
+
+    /**
+     * Export alumni data to CSV with filters applied.
+     */
+    public function exportAlumni(Request $request)
+    {
+        $query = User::whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin');
+        });
+
+        // Apply the same filters as alumniDirectory
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            if (! empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('enrollment_no', 'like', "%{$search}%")
+                        ->orWhere('major', 'like', "%{$search}%")
+                        ->orWhere('course', 'like', "%{$search}%")
+                        ->orWhere('company', 'like', "%{$search}%")
+                        ->orWhere('current_position', 'like', "%{$search}%")
+                        ->orWhere('designation', 'like', "%{$search}%")
+                        ->orWhere('passing_year', 'like', "%{$search}%");
+                });
+            }
+        }
+
+        // Filter by passing year
+        if ($request->filled('passing_year')) {
+            $query->where('passing_year', $request->passing_year);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by profile status
+        if ($request->filled('profile_status')) {
+            $query->where('profile_status', $request->profile_status);
+        }
+
+        // Apply sorting
+        $sortBy = $request->get('sort_by', 'name');
+        $sortOrder = $request->get('sort_order', 'asc');
+
+        // Validate sort_by and sort_order
+        $allowedSortFields = ['name', 'passing_year', 'course', 'company'];
+        if (! in_array($sortBy, $allowedSortFields)) {
+            $sortBy = 'name';
+        }
+        if (! in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'asc';
+        }
+
+        $query->orderBy($sortBy, $sortOrder);
+
+        $alumni = $query->get();
+
+        $fileName = 'alumni_export_'.now()->format('Y-m-d_His').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+        ];
+
+        $callback = function () use ($alumni) {
+            $file = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($file, [
+                'Name',
+                'Enrollment No',
+                'Email',
+                'Alternate Email',
+                'Phone',
+                'Graduation Year',
+                'Passing Year',
+                'Major',
+                'Course',
+                'Residence Address',
+                'Residence City',
+                'Residence State',
+                'Residence Country',
+                'Aadhar Number',
+                'Date of Birth',
+                'Wedding Anniversary Date',
+                'Bio',
+                'Current Position',
+                'Designation',
+                'Company',
+                'Employment Type',
+                'Employment Address',
+                'Employment City',
+                'Employment State',
+                'Employment Pincode',
+                'LinkedIn URL',
+                'Status',
+                'Profile Status',
+                'Profile Completed',
+                'Profile Submitted At',
+                'Created At',
+            ]);
+
+            // Add data rows
+            foreach ($alumni as $alumnus) {
+                fputcsv($file, [
+                    $alumnus->name,
+                    $alumnus->enrollment_no,
+                    $alumnus->email,
+                    $alumnus->alternate_email,
+                    $alumnus->phone,
+                    $alumnus->graduation_year,
+                    $alumnus->passing_year,
+                    $alumnus->major,
+                    $alumnus->course,
+                    $alumnus->residence_address,
+                    $alumnus->residence_city,
+                    $alumnus->residence_state,
+                    $alumnus->residence_country,
+                    $alumnus->aadhar_number,
+                    $alumnus->date_of_birth?->format('Y-m-d'),
+                    $alumnus->wedding_anniversary_date?->format('Y-m-d'),
+                    $alumnus->bio,
+                    $alumnus->current_position,
+                    $alumnus->designation,
+                    $alumnus->company,
+                    $alumnus->employment_type,
+                    $alumnus->employment_address,
+                    $alumnus->employment_city,
+                    $alumnus->employment_state,
+                    $alumnus->employment_pincode,
+                    $alumnus->linkedin_url,
+                    $alumnus->status,
+                    $alumnus->profile_status,
+                    $alumnus->profile_completed ? 'Yes' : 'No',
+                    $alumnus->profile_submitted_at?->format('Y-m-d H:i:s'),
+                    $alumnus->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

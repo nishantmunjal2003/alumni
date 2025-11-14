@@ -1,21 +1,28 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'View Alumni - ' . $user->name)
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
-    <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold">Alumni Details</h1>
-        <a href="{{ route('manager.alumni.index') }}" class="text-indigo-600 hover:text-indigo-800">Back to Alumni List</a>
+<div class="max-w-4xl mx-auto space-y-4 sm:space-y-6 px-4 sm:px-0">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+        <h1 class="text-2xl sm:text-3xl font-bold">Alumni Profile: {{ $user->name }}</h1>
+        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-start sm:items-center">
+            <a href="{{ route('admin.alumni.email', $user->id) }}" class="w-full sm:w-auto text-center bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors touch-manipulation inline-flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                Send Email
+            </a>
+            <a href="{{ route('admin.alumni.index') }}" class="text-sm sm:text-base text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Directory
+            </a>
+        </div>
     </div>
 
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    <div class="bg-white shadow rounded-lg p-6">
+    <div class="bg-white shadow rounded-lg p-4 sm:p-6">
         <!-- Alumni Details -->
         <div class="border-b pb-6 mb-6">
             <h2 class="text-2xl font-semibold mb-4">Alumni Details</h2>
@@ -27,6 +34,10 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-500">Email</label>
                     <p class="mt-1 text-gray-900">{{ $user->email }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Enrollment No.</label>
+                    <p class="mt-1 text-gray-900">{{ $user->enrollment_no ?? 'N/A' }}</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-500">Passing Year</label>
@@ -87,7 +98,17 @@
                 @if($user->profile_image)
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Profile Photo</label>
-                        <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile Photo" class="mt-2 h-32 w-32 rounded-full object-cover">
+                        <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile Photo" class="mt-2 h-32 w-32 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="mt-2 h-32 w-32 rounded-full bg-indigo-100 flex items-center justify-center hidden">
+                            <span class="text-indigo-600 font-semibold text-2xl">{{ getUserInitials($user->name) }}</span>
+                        </div>
+                    </div>
+                @else
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Profile Photo</label>
+                        <div class="mt-2 h-32 w-32 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <span class="text-indigo-600 font-semibold text-2xl">{{ getUserInitials($user->name) }}</span>
+                        </div>
                     </div>
                 @endif
             </div>
@@ -108,6 +129,10 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-500">Employment Type</label>
                     <p class="mt-1 text-gray-900">{{ $user->employment_type ?? 'N/A' }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Phone</label>
+                    <p class="mt-1 text-gray-900">{{ $user->phone ?? 'N/A' }}</p>
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-500">Address</label>
@@ -140,12 +165,20 @@
             </div>
         </div>
 
-        <!-- Account Status -->
+        <!-- Bio Section -->
+        @if($user->bio)
+        <div class="border-b pb-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Bio</h2>
+            <p class="text-gray-900 whitespace-pre-wrap">{{ $user->bio }}</p>
+        </div>
+        @endif
+
+        <!-- Status Information -->
         <div class="border-b pb-6 mb-6">
             <h2 class="text-2xl font-semibold mb-4">Account Status</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-500">Status</label>
+                    <label class="block text-sm font-medium text-gray-500">Account Status</label>
                     <p class="mt-1">
                         @if($user->status === 'active')
                             <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">Active</span>
@@ -157,39 +190,44 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-500">Profile Status</label>
                     <p class="mt-1">
-                        @if($user->profile_status === 'pending')
+                        @if($user->profile_status === 'approved')
+                            <span class="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">Approved</span>
+                        @elseif($user->profile_status === 'pending')
                             <span class="px-3 py-1 text-sm rounded-full bg-yellow-100 text-yellow-800">Pending</span>
-                        @elseif($user->profile_status === 'approved')
-                            <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">Approved</span>
-                        @elseif($user->profile_status === 'blocked')
+                        @else
                             <span class="px-3 py-1 text-sm rounded-full bg-red-100 text-red-800">Blocked</span>
                         @endif
                     </p>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Profile Completed</label>
+                    <p class="mt-1">
+                        @if($user->profile_completed)
+                            <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">Yes</span>
+                        @else
+                            <span class="px-3 py-1 text-sm rounded-full bg-red-100 text-red-800">No</span>
+                        @endif
+                    </p>
+                </div>
+                @if($user->profile_submitted_at)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500">Profile Submitted</label>
+                        <p class="mt-1 text-gray-900">{{ $user->profile_submitted_at->format('F d, Y g:i A') }}</p>
+                    </div>
+                @endif
             </div>
         </div>
 
         <!-- Actions -->
-        <div class="flex justify-end gap-4">
-            @if($user->status === 'active')
-                <form method="POST" action="{{ route('manager.alumni.deactivate', $user->id) }}" class="inline">
-                    @csrf
-                    <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700" onclick="return confirm('Are you sure you want to deactivate this account?')">
-                        Deactivate Account
-                    </button>
-                </form>
-            @else
-                <form method="POST" action="{{ route('manager.alumni.activate', $user->id) }}" class="inline">
-                    @csrf
-                    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700" onclick="return confirm('Are you sure you want to activate this account?')">
-                        Activate Account
-                    </button>
-                </form>
-            @endif
+        <div class="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-6 border-t">
+            <a href="{{ route('admin.users.edit', $user->id) }}" class="w-full sm:w-auto text-center bg-indigo-600 text-white px-6 py-2.5 rounded-md hover:bg-indigo-700 transition-colors touch-manipulation inline-flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit Profile
+            </a>
         </div>
     </div>
 </div>
 @endsection
-
-
 

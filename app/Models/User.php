@@ -81,6 +81,19 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Set the user's name with proper formatting.
+     */
+    public function setNameAttribute(?string $value): void
+    {
+        if ($value) {
+            // Trim whitespace and format with Title Case (first letter of each word capitalized)
+            $this->attributes['name'] = ucwords(strtolower(trim($value)), " \t\r\n\f\v");
+        } else {
+            $this->attributes['name'] = $value;
+        }
+    }
+
     // Relationships
     public function campaigns()
     {
@@ -114,11 +127,11 @@ class User extends Authenticatable
 
     public function batchmates()
     {
-        if (! $this->graduation_year) {
-            return User::whereRaw('1 = 0'); // Return empty query if no graduation year
+        if (! $this->passing_year) {
+            return User::whereRaw('1 = 0'); // Return empty query if no passing year
         }
 
-        return User::where('graduation_year', $this->graduation_year)
+        return User::where('passing_year', $this->passing_year)
             ->where('id', '!=', $this->id)
             ->where('status', 'active');
     }
@@ -129,7 +142,6 @@ class User extends Authenticatable
     public function isProfileComplete(): bool
     {
         return $this->profile_completed &&
-            $this->enrollment_no &&
             $this->passing_year &&
             $this->course &&
             $this->residence_address &&

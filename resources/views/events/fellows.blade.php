@@ -50,7 +50,16 @@
                     @foreach($yearRegistrations as $registration)
                         <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
                             <div class="flex items-center space-x-4 mb-4">
-                                <img src="{{ $registration->user->profile_image ? asset('storage/' . $registration->user->profile_image) : 'https://ui-avatars.com/api/?name=' . urlencode($registration->user->name) }}" alt="{{ $registration->user->name }}" class="w-16 h-16 rounded-full">
+                                @if($registration->user->profile_image)
+                                    <img src="{{ asset('storage/' . $registration->user->profile_image) }}" alt="{{ $registration->user->name }}" class="w-16 h-16 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center hidden">
+                                        <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-base">{{ getUserInitials($registration->user->name) }}</span>
+                                    </div>
+                                @else
+                                    <div class="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                        <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-base">{{ getUserInitials($registration->user->name) }}</span>
+                                    </div>
+                                @endif
                                 <div>
                                     <h3 class="font-semibold text-gray-900 dark:text-white">{{ $registration->user->name }}</h3>
                                     @if($registration->user->passing_year || $registration->user->course)

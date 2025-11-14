@@ -12,7 +12,16 @@
                     <a href="{{ route('messages.show', $conversation['user']->id) }}" class="block p-4 hover:bg-gray-50">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
-                                <img src="{{ $conversation['user']->profile_image ? asset('storage/' . $conversation['user']->profile_image) : 'https://ui-avatars.com/api/?name=' . urlencode($conversation['user']->name) }}" alt="{{ $conversation['user']->name }}" class="w-12 h-12 rounded-full">
+                                @if($conversation['user']->profile_image)
+                                    <img src="{{ asset('storage/' . $conversation['user']->profile_image) }}" alt="{{ $conversation['user']->name }}" class="w-12 h-12 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center hidden">
+                                        <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-xs">{{ getUserInitials($conversation['user']->name) }}</span>
+                                    </div>
+                                @else
+                                    <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                        <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-xs">{{ getUserInitials($conversation['user']->name) }}</span>
+                                    </div>
+                                @endif
                                 <div>
                                     <p class="font-semibold">{{ $conversation['user']->name }}</p>
                                     <p class="text-sm text-gray-600">{{ Str::limit($conversation['last_message']->message, 50) }}</p>
@@ -34,6 +43,8 @@
     </div>
 </div>
 @endsection
+
+
 
 
 

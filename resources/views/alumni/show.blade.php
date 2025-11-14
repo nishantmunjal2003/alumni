@@ -6,7 +6,16 @@
 <div class="max-w-4xl mx-auto">
     <div class="bg-white shadow rounded-lg p-6">
         <div class="flex items-start space-x-6">
-            <img src="{{ $alumni->profile_image ? asset('storage/' . $alumni->profile_image) : 'https://ui-avatars.com/api/?name=' . urlencode($alumni->name) }}" alt="{{ $alumni->name }}" class="w-32 h-32 rounded-full">
+            @if($alumni->profile_image)
+                <img src="{{ asset('storage/' . $alumni->profile_image) }}" alt="{{ $alumni->name }}" class="w-32 h-32 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="w-32 h-32 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center hidden">
+                    <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-2xl">{{ getUserInitials($alumni->name) }}</span>
+                </div>
+            @else
+                <div class="w-32 h-32 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                    <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-2xl">{{ getUserInitials($alumni->name) }}</span>
+                </div>
+            @endif
             <div class="flex-1">
                 <h1 class="text-3xl font-bold">{{ $alumni->name }}</h1>
                 @if($alumni->passing_year || $alumni->course)

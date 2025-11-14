@@ -3,7 +3,16 @@
         @foreach($alumni as $alumnus)
             <a href="{{ route('alumni.show', $alumnus->id) }}" class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-600 transition-all">
                 <div class="flex items-start gap-4">
-                    <img src="{{ $alumnus->profile_image ? asset('storage/' . $alumnus->profile_image) : 'https://ui-avatars.com/api/?name=' . urlencode($alumnus->name) }}" alt="{{ $alumnus->name }}" class="w-14 h-14 rounded-full ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-indigo-500 transition-all flex-shrink-0">
+                    @if($alumnus->profile_image)
+                        <img src="{{ asset('storage/' . $alumnus->profile_image) }}" alt="{{ $alumnus->name }}" class="w-14 h-14 rounded-full ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-indigo-500 transition-all flex-shrink-0 object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-indigo-500 transition-all flex-shrink-0 hidden">
+                            <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-sm">{{ getUserInitials($alumnus->name) }}</span>
+                        </div>
+                    @else
+                        <div class="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-indigo-500 transition-all flex-shrink-0">
+                            <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-sm">{{ getUserInitials($alumnus->name) }}</span>
+                        </div>
+                    @endif
                     <div class="flex-1 min-w-0">
                         <h3 class="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{{ $alumnus->name }}</h3>
                         @if($alumnus->passing_year || $alumnus->course)

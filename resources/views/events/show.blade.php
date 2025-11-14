@@ -31,8 +31,23 @@
                 @if(!$isRegistered)
                     <a href="{{ route('events.register', $event->id) }}" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors inline-block">Register for Event</a>
                 @else
-                    <p class="text-green-600 dark:text-green-400 font-semibold mb-2">You are registered for this event!</p>
-                    <a href="{{ route('events.fellows', $event->id) }}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">View Fellows →</a>
+                    <div class="space-y-3">
+                        <p class="text-green-600 dark:text-green-400 font-semibold">You are registered for this event!</p>
+                        <div class="flex flex-wrap gap-3">
+                            <a href="{{ route('events.registrations.edit', [$event->id, $registration->id]) }}" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 transition-colors inline-flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Edit Registration
+                            </a>
+                            <a href="{{ route('events.fellows', $event->id) }}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 inline-flex items-center gap-2 px-6 py-2 border border-indigo-600 dark:border-indigo-400 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+                                View Fellows
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
                 @endif
             @else
                 <p class="text-gray-600 dark:text-gray-400">Please <a href="{{ route('login') }}" class="text-indigo-600 dark:text-indigo-400">login</a> to register for this event.</p>
