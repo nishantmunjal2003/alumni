@@ -28,7 +28,14 @@ class AdminController extends Controller
             'recent_registrations' => User::latest()->limit(5)->get(),
         ];
 
-        return view('admin.dashboard', compact('stats'));
+        $activeCampaigns = Campaign::where('status', 'published')
+            ->where('end_date', '>=', now())
+            ->with('creator')
+            ->orderBy('start_date', 'desc')
+            ->limit(6)
+            ->get();
+
+        return view('admin.dashboard', compact('stats', 'activeCampaigns'));
     }
 
     public function users(Request $request)

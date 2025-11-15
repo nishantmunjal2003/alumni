@@ -85,6 +85,203 @@
         </div>
     </section>
 
+    <!-- Global Alumni Section with Rotating Globe -->
+    <section class="py-20 bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-[#1a1a1a] dark:via-[#161615] dark:to-[#1a1a1a] relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <!-- Text Content -->
+                <div class="text-center lg:text-left">
+                    <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                        Find Your Alumni
+                        <span class="text-indigo-600 dark:text-indigo-400">Around the Globe</span>
+                    </h2>
+                    <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">
+                        Our alumni network spans across continents, connecting graduates from different countries and cultures. 
+                        Whether you're in India, the United States, Europe, or anywhere else in the world, 
+                        you're part of a global community that shares the same values and experiences.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="{{ route('alumni.index') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg">
+                            Explore Alumni Directory
+                        </a>
+                        @auth
+                            <a href="{{ route('alumni.map') }}" class="bg-white dark:bg-[#161615] border-2 border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-[#1a1a1a] px-6 py-3 rounded-lg font-medium transition-colors">
+                                View Alumni Map
+                            </a>
+                        @endif
+                    </div>
+                </div>
+                
+                <!-- Rotating Globe -->
+                <div class="flex justify-center lg:justify-end">
+                    <div class="relative w-full max-w-md h-96">
+                        <div class="globe-container">
+                            <div class="globe">
+                                <svg class="globe-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Globe circles (latitudes) -->
+                                    <circle cx="200" cy="200" r="180" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2" class="dark:opacity-30"/>
+                                    <circle cx="200" cy="200" r="150" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2" class="dark:opacity-30"/>
+                                    <circle cx="200" cy="200" r="120" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2" class="dark:opacity-30"/>
+                                    
+                                    <!-- Continents (simplified) -->
+                                    <!-- North America -->
+                                    <path d="M 80 80 Q 100 60 120 80 Q 140 100 160 90 Q 180 85 200 100 Q 220 110 240 105 Q 260 100 280 110 Q 300 120 320 100 Q 340 90 360 100" 
+                                          fill="none" stroke="currentColor" stroke-width="2" opacity="0.6" class="continent"/>
+                                    
+                                    <!-- South America -->
+                                    <path d="M 140 200 Q 150 220 160 240 Q 170 260 180 280 Q 190 300 200 310 Q 210 320 220 330 Q 230 340 240 350" 
+                                          fill="none" stroke="currentColor" stroke-width="2" opacity="0.6" class="continent"/>
+                                    
+                                    <!-- Europe -->
+                                    <path d="M 180 60 Q 200 70 220 65 Q 240 60 260 70 Q 280 75 300 80" 
+                                          fill="none" stroke="currentColor" stroke-width="2" opacity="0.6" class="continent"/>
+                                    
+                                    <!-- Africa -->
+                                    <path d="M 200 120 Q 210 140 220 160 Q 230 180 240 200 Q 250 220 260 240 Q 270 260 280 280 Q 290 300 300 320" 
+                                          fill="none" stroke="currentColor" stroke-width="2" opacity="0.6" class="continent"/>
+                                    
+                                    <!-- Asia -->
+                                    <path d="M 240 60 Q 260 80 280 100 Q 300 120 320 140 Q 340 160 360 180 Q 340 200 320 220 Q 300 240 280 260" 
+                                          fill="none" stroke="currentColor" stroke-width="2" opacity="0.6" class="continent"/>
+                                    
+                                    <!-- Australia -->
+                                    <path d="M 300 280 Q 310 290 320 300 Q 330 310 340 300 Q 350 290 360 300" 
+                                          fill="none" stroke="currentColor" stroke-width="2" opacity="0.6" class="continent"/>
+                                    
+                                    <!-- Longitude lines -->
+                                    <line x1="200" y1="20" x2="200" y2="380" stroke="currentColor" stroke-width="1" opacity="0.2" class="dark:opacity-30"/>
+                                    <line x1="100" y1="20" x2="100" y2="380" stroke="currentColor" stroke-width="1" opacity="0.2" class="dark:opacity-30"/>
+                                    <line x1="300" y1="20" x2="300" y2="380" stroke="currentColor" stroke-width="1" opacity="0.2" class="dark:opacity-30"/>
+                                    
+                                    <!-- Latitude lines -->
+                                    <ellipse cx="200" cy="200" rx="180" ry="60" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2" class="dark:opacity-30"/>
+                                    <ellipse cx="200" cy="200" rx="180" ry="120" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2" class="dark:opacity-30"/>
+                                    
+                                    <!-- Dots representing alumni locations -->
+                                    <circle cx="120" cy="90" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="180" cy="70" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="240" cy="100" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="280" cy="80" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="160" cy="250" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="200" cy="280" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="220" cy="65" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="260" cy="75" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="240" cy="180" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="280" cy="240" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="320" cy="150" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="300" cy="290" r="3" fill="#10b981" class="alumni-dot"/>
+                                    <circle cx="340" cy="300" r="3" fill="#10b981" class="alumni-dot"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            .globe-container {
+                perspective: 1200px;
+                perspective-origin: center center;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .globe {
+                width: 100%;
+                height: 100%;
+                position: relative;
+                transform-style: preserve-3d;
+                animation: rotateGlobe 30s linear infinite;
+            }
+            
+            .globe-svg {
+                width: 100%;
+                height: 100%;
+                color: #4f46e5;
+                filter: drop-shadow(0 10px 30px rgba(79, 70, 229, 0.2));
+            }
+            
+            .dark .globe-svg {
+                color: #818cf8;
+                filter: drop-shadow(0 10px 30px rgba(129, 140, 248, 0.3));
+            }
+            
+            .continent {
+                animation: pulseContinent 4s ease-in-out infinite;
+            }
+            
+            .alumni-dot {
+                animation: pulseDot 2.5s ease-in-out infinite;
+                filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6));
+            }
+            
+            .alumni-dot:nth-of-type(1) { animation-delay: 0s; }
+            .alumni-dot:nth-of-type(2) { animation-delay: 0.2s; }
+            .alumni-dot:nth-of-type(3) { animation-delay: 0.4s; }
+            .alumni-dot:nth-of-type(4) { animation-delay: 0.6s; }
+            .alumni-dot:nth-of-type(5) { animation-delay: 0.8s; }
+            .alumni-dot:nth-of-type(6) { animation-delay: 1s; }
+            .alumni-dot:nth-of-type(7) { animation-delay: 1.2s; }
+            .alumni-dot:nth-of-type(8) { animation-delay: 1.4s; }
+            .alumni-dot:nth-of-type(9) { animation-delay: 1.6s; }
+            .alumni-dot:nth-of-type(10) { animation-delay: 1.8s; }
+            .alumni-dot:nth-of-type(11) { animation-delay: 2s; }
+            .alumni-dot:nth-of-type(12) { animation-delay: 2.2s; }
+            .alumni-dot:nth-of-type(13) { animation-delay: 2.4s; }
+            
+            @keyframes rotateGlobe {
+                0% {
+                    transform: rotateY(0deg) rotateX(10deg);
+                }
+                100% {
+                    transform: rotateY(360deg) rotateX(10deg);
+                }
+            }
+            
+            @keyframes pulseContinent {
+                0%, 100% {
+                    opacity: 0.5;
+                    stroke-width: 2;
+                }
+                50% {
+                    opacity: 0.8;
+                    stroke-width: 2.5;
+                }
+            }
+            
+            @keyframes pulseDot {
+                0%, 100% {
+                    opacity: 0.7;
+                    transform: scale(1);
+                }
+                50% {
+                    opacity: 1;
+                    transform: scale(1.5);
+                }
+            }
+            
+            @media (prefers-reduced-motion: reduce) {
+                .globe {
+                    animation: none;
+                }
+                .continent,
+                .alumni-dot {
+                    animation: none;
+                }
+            }
+            
+            @media (max-width: 768px) {
+                .globe-container {
+                    perspective: 800px;
+                }
+            }
+        </style>
+    </section>
+
     <!-- Features Section -->
     <section class="py-20 bg-[#FDFDFC] dark:bg-[#0a0a0a]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
