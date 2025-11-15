@@ -38,77 +38,33 @@
     <section class="relative bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-[#1a1a1a] dark:via-[#161615] dark:to-[#1a1a1a] py-20 lg:py-32 overflow-hidden">
         <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-            <div class="text-center">
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-                    Welcome to Our
-                    <span class="text-indigo-600 dark:text-indigo-400">Alumni Network</span>
-                </h1>
-                <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-                    Connect with fellow alumni, stay updated with events, and contribute to meaningful campaigns. 
-                    Together, we grow stronger.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    @auth
-                        <a href="{{ route('dashboard') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors shadow-lg">
-                            Go to Dashboard
-                        </a>
-                    @else
-                        <a href="{{ route('register') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors shadow-lg">
-                            Join Our Network
-                        </a>
-                        <a href="{{ route('login') }}" class="bg-white dark:bg-[#161615] border-2 border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-[#1a1a1a] px-8 py-3 rounded-lg font-medium text-lg transition-colors">
-                            Sign In
-                        </a>
-                    @endauth
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Statistics Section -->
-    <section class="py-16 bg-white dark:bg-[#161615] border-y border-[#e3e3e0] dark:border-[#3E3E3A]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center">
-                    <div class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">{{ number_format($totalAlumni) }}+</div>
-                    <div class="text-gray-600 dark:text-gray-400 font-medium">Active Alumni</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">{{ number_format($totalEvents) }}+</div>
-                    <div class="text-gray-600 dark:text-gray-400 font-medium">Events Organized</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">{{ $recentCampaigns->count() }}</div>
-                    <div class="text-gray-600 dark:text-gray-400 font-medium">Active Campaigns</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Global Alumni Section with Rotating Globe -->
-    <section class="py-20 bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-[#1a1a1a] dark:via-[#161615] dark:to-[#1a1a1a] relative overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <!-- Text Content -->
                 <div class="text-center lg:text-left">
-                    <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                        Find Your Alumni
-                        <span class="text-indigo-600 dark:text-indigo-400">Around the Globe</span>
-                    </h2>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+                        Welcome to Our
+                        <span class="text-indigo-600 dark:text-indigo-400">Alumni Network</span>
+                    </h1>
+                    <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto lg:mx-0">
+                        Connect with fellow alumni, stay updated with events, and contribute to meaningful campaigns. 
+                        Together, we grow stronger.
+                    </p>
                     <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">
-                        Our alumni network spans across continents, connecting graduates from different countries and cultures. 
-                        Whether you're in India, the United States, Europe, or anywhere else in the world, 
-                        you're part of a global community that shares the same values and experiences.
+                        Find your alumni <span class="font-semibold text-indigo-600 dark:text-indigo-400">around the globe</span>
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                        <a href="{{ route('alumni.index') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg">
-                            Explore Alumni Directory
-                        </a>
                         @auth
-                            <a href="{{ route('alumni.map') }}" class="bg-white dark:bg-[#161615] border-2 border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-[#1a1a1a] px-6 py-3 rounded-lg font-medium transition-colors">
-                                View Alumni Map
+                            <a href="{{ route('dashboard') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors shadow-lg">
+                                Go to Dashboard
                             </a>
-                        @endif
+                        @else
+                            <a href="{{ route('register') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors shadow-lg">
+                                Join Our Network
+                            </a>
+                            <a href="{{ route('login') }}" class="bg-white dark:bg-[#161615] border-2 border-indigo-600 dark:border-indigo-400 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-[#1a1a1a] px-8 py-3 rounded-lg font-medium text-lg transition-colors">
+                                Sign In
+                            </a>
+                        @endauth
                     </div>
                 </div>
                 
@@ -280,6 +236,26 @@
                 }
             }
         </style>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="py-16 bg-white dark:bg-[#161615] border-y border-[#e3e3e0] dark:border-[#3E3E3A]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">{{ number_format($totalAlumni) }}+</div>
+                    <div class="text-gray-600 dark:text-gray-400 font-medium">Active Alumni</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">{{ number_format($totalEvents) }}+</div>
+                    <div class="text-gray-600 dark:text-gray-400 font-medium">Events Organized</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">{{ $recentCampaigns->count() }}</div>
+                    <div class="text-gray-600 dark:text-gray-400 font-medium">Active Campaigns</div>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- Features Section -->
