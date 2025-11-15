@@ -44,7 +44,10 @@ class EventController extends Controller
 
     public function adminIndex()
     {
-        $events = Event::with('creator')->orderBy('created_at', 'desc')->paginate(20);
+        $events = Event::with('creator')
+            ->withCount('registrations')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
 
         return view('admin.events.index', compact('events'));
     }
@@ -140,6 +143,129 @@ class EventController extends Controller
         $this->sendInvitations($event);
 
         return back()->with('success', 'Invitations resent successfully!');
+    }
+
+    public function showRegistrations($id)
+    {
+        $event = Event::findOrFail($id);
+        $registrations = $event->registrations()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('admin.events.registrations', compact('event', 'registrations'));
+    }
+
+    public function showEmailForm($id)
+    {
+        $event = Event::findOrFail($id);
+        $registrations = $event->registrations()->with('user')->get();
+        $recipientCount = $registrations->count();
+
+        return view('admin.events.email-form', compact('event', 'recipientCount'));
+    }
+
+    public function sendEmail(Request $request, $id)
+    {
+        $event = Event::findOrFail($id);
+
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+        ]);
+
+        $registrations = $event->registrations()->with('user')->get();
+
+        if ($registrations->isEmpty()) {
+            return redirect()->back()
+                ->withErrors(['error' => 'No registrations found for this event.']);
+        }
+
+        $sentCount = 0;
+        foreach ($registrations as $registration) {
+            try {
+                Mail::to($registration->user->email)->send(
+                    new \App\Mail\AlumniEmail(
+                        $registration->user,
+                        $validated['subject'],
+                        $validated['message']
+                    )
+                );
+                $sentCount++;
+            } catch (\Exception $e) {
+                \Log::error("Failed to send email to {$registration->user->email}: ".$e->getMessage());
+            }
+        }
+
+        return redirect()->route('admin.events.registrations', $event->id)
+            ->with('success', "Email sent successfully to {$sentCount} out of {$registrations->count()} registrants.");
+    }
+
+    public function exportRegistrations($id)
+    {
+        $event = Event::findOrFail($id);
+        $registrations = $event->registrations()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $fileName = 'event_registrations_'.$event->id.'_'.now()->format('Y-m-d_His').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+        ];
+
+        $callback = function () use ($registrations) {
+            $file = fopen('php://output', 'w');
+
+            // Add CSV headers
+            fputcsv($file, [
+                'Name',
+                'Email',
+                'Phone',
+                'Course',
+                'Passing Year',
+                'Company',
+                'Designation',
+                'Arrival Date',
+                'Arrival Time',
+                'Coming From City',
+                'Travel Mode',
+                'Needs Stay',
+                'Coming With Family',
+                'Return Journey Details',
+                'Memories Description',
+                'Registered At',
+            ]);
+
+            // Add data rows
+            foreach ($registrations as $registration) {
+                $user = $registration->user;
+                fputcsv($file, [
+                    $user->name,
+                    $user->email,
+                    $user->phone,
+                    $user->course,
+                    $user->passing_year,
+                    $user->company,
+                    $user->designation,
+                    $registration->arrival_date?->format('Y-m-d'),
+                    $registration->arrival_time?->format('Y-m-d H:i:s'),
+                    $registration->coming_from_city,
+                    $registration->travel_mode,
+                    $registration->needs_stay ? 'Yes' : 'No',
+                    $registration->coming_with_family ? 'Yes' : 'No',
+                    $registration->return_journey_details,
+                    $registration->memories_description,
+                    $registration->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     private function sendInvitations(Event $event)

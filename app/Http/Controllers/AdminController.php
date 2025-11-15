@@ -18,13 +18,21 @@ class AdminController extends Controller
 
     public function dashboard()
     {
+        // Use a single query with selectRaw to get multiple counts efficiently
+        $userStats = User::selectRaw('
+            COUNT(*) as total_users,
+            SUM(CASE WHEN status = "active" THEN 1 ELSE 0 END) as active_users,
+            SUM(CASE WHEN status = "inactive" THEN 1 ELSE 0 END) as inactive_users,
+            SUM(CASE WHEN profile_status = "pending" AND profile_completed = 1 THEN 1 ELSE 0 END) as pending_profiles
+        ')->first();
+
         $stats = [
-            'total_users' => User::count(),
+            'total_users' => (int) $userStats->total_users,
+            'active_users' => (int) $userStats->active_users,
+            'inactive_users' => (int) $userStats->inactive_users,
             'total_events' => Event::count(),
             'total_campaigns' => Campaign::count(),
-            'pending_profiles' => User::where('profile_status', 'pending')
-                ->where('profile_completed', true)
-                ->count(),
+            'pending_profiles' => (int) $userStats->pending_profiles,
             'recent_registrations' => User::latest()->limit(5)->get(),
         ];
 
@@ -63,7 +71,13 @@ class AdminController extends Controller
         // Exclude 'user' role - all users are alumni by default
         $roles = Role::where('name', '!=', 'user')->get();
 
-        return view('admin.users.index', compact('users', 'roles'));
+        // Pre-compute user roles to avoid N+1 queries in the view
+        $userRoles = [];
+        foreach ($users as $user) {
+            $userRoles[$user->id] = $user->roles->pluck('name')->toArray();
+        }
+
+        return view('admin.users.index', compact('users', 'roles', 'userRoles'));
     }
 
     public function updateUserRoles(Request $request, User $user)

@@ -120,6 +120,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/events/{id}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{id}', [EventController::class, 'destroy'])->name('events.destroy');
     Route::post('/events/{id}/resend-invites', [EventController::class, 'resendInvites'])->name('events.resend-invites');
+    Route::get('/events/{id}/registrations', [EventController::class, 'showRegistrations'])->name('events.registrations');
+    Route::get('/events/{id}/email', [EventController::class, 'showEmailForm'])->name('events.email');
+    Route::post('/events/{id}/email', [EventController::class, 'sendEmail'])->name('events.email.send');
+    Route::get('/events/{id}/export', [EventController::class, 'exportRegistrations'])->name('events.export');
 
     // Campaign management
     Route::get('/campaigns', [CampaignController::class, 'adminIndex'])->name('campaigns.index');
@@ -143,7 +147,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/alumni/map/locations', [AlumniMapController::class, 'getAlumniLocations'])->name('alumni.map.locations');
     Route::get('/alumni/export/excel', [AdminController::class, 'exportAlumni'])->name('alumni.export');
     Route::get('/alumni/{user}', [AdminController::class, 'viewAlumni'])->name('alumni.view');
-    
+
     // Email functionality
     Route::get('/alumni/{user}/email', [AdminController::class, 'showEmailForm'])->name('alumni.email');
     Route::post('/alumni/{user}/email', [AdminController::class, 'sendEmailToAlumni'])->name('alumni.email.send');

@@ -23,6 +23,7 @@ class AlumniController extends Controller
             ->whereDoesntHave('roles', function ($query) {
                 $query->where('name', 'admin');
             })
+            ->with('roles')
             ->limit(10)
             ->get();
 
@@ -33,8 +34,8 @@ class AlumniController extends Controller
             ->get();
 
         // Check for missing optional fields
-        $missingEnrollmentNo = !$user->enrollment_no;
-        $missingProofDocument = !$user->proof_document;
+        $missingEnrollmentNo = ! $user->enrollment_no;
+        $missingProofDocument = ! $user->proof_document;
 
         return view('alumni.dashboard', compact('batchmates', 'upcomingEvents', 'missingEnrollmentNo', 'missingProofDocument'));
     }
@@ -49,7 +50,7 @@ class AlumniController extends Controller
         // Only apply search filter if search term is not empty
         if ($request->filled('search')) {
             $search = trim($request->search);
-            if (!empty($search)) {
+            if (! empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")

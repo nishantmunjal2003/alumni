@@ -153,6 +153,7 @@
                                         @php
                                             $isAdminRole = $role->name === 'admin';
                                             $isDisabled = $isProtectedAdmin && $isAdminRole;
+                                            $hasRole = in_array($role->name, $userRoles[$user->id] ?? []);
                                         @endphp
                                         <label class="inline-flex items-center {{ $isDisabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
                                             <input 
@@ -160,11 +161,11 @@
                                                 class="sr-only peer role-checkbox" 
                                                 data-user-id="{{ $user->id }}"
                                                 data-role-name="{{ $role->name }}"
-                                                {{ $user->hasRole($role->name) ? 'checked' : '' }}
+                                                {{ $hasRole ? 'checked' : '' }}
                                                 {{ $isDisabled ? 'disabled' : '' }}
                                                 onchange="{{ $isDisabled ? '' : "updateUserRoles({$user->id})" }}"
                                             >
-                                            <span class="px-3 py-1 text-xs rounded-full transition-colors {{ $user->hasRole($role->name) ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600' }} {{ $isDisabled ? 'opacity-50' : '' }} peer-checked:bg-indigo-100 peer-checked:text-indigo-800">
+                                            <span class="px-3 py-1 text-xs rounded-full transition-colors {{ $hasRole ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600' }} {{ $isDisabled ? 'opacity-50' : '' }} peer-checked:bg-indigo-100 peer-checked:text-indigo-800">
                                                 {{ $role->name }}
                                                 @if($isDisabled)
                                                     <span class="text-xs text-gray-500 ml-1">(Protected)</span>
@@ -293,6 +294,7 @@
                             @php
                                 $isAdminRole = $role->name === 'admin';
                                 $isDisabled = $isProtectedAdmin && $isAdminRole;
+                                $hasRole = in_array($role->name, $userRoles[$user->id] ?? []);
                             @endphp
                             <label class="inline-flex items-center {{ $isDisabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
                                 <input 
@@ -300,11 +302,11 @@
                                     class="sr-only peer role-checkbox" 
                                     data-user-id="{{ $user->id }}"
                                     data-role-name="{{ $role->name }}"
-                                    {{ $user->hasRole($role->name) ? 'checked' : '' }}
+                                    {{ $hasRole ? 'checked' : '' }}
                                     {{ $isDisabled ? 'disabled' : '' }}
                                     onchange="{{ $isDisabled ? '' : "updateUserRoles({$user->id})" }}"
                                 >
-                                <span class="px-3 py-1 text-xs rounded-full transition-colors {{ $user->hasRole($role->name) ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600' }} {{ $isDisabled ? 'opacity-50' : '' }} peer-checked:bg-indigo-100 peer-checked:text-indigo-800">
+                                <span class="px-3 py-1 text-xs rounded-full transition-colors {{ $hasRole ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600' }} {{ $isDisabled ? 'opacity-50' : '' }} peer-checked:bg-indigo-100 peer-checked:text-indigo-800">
                                     {{ $role->name }}
                                     @if($isDisabled)
                                         <span class="text-xs text-gray-500 ml-1">(Protected)</span>
