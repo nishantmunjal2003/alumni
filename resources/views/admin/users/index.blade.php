@@ -2,17 +2,6 @@
 
 @section('title', 'Manage Users')
 
-@php
-    function getUserInitials($name) {
-        $name = trim($name);
-        $parts = explode(' ', $name);
-        if (count($parts) >= 2) {
-            return strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
-        }
-        return strtoupper(substr($name, 0, 1));
-    }
-@endphp
-
 @section('content')
 <div class="space-y-6 px-4 sm:px-0">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -134,19 +123,26 @@
                                 <div class="text-sm text-gray-900">{{ $user->email }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
+                                @php
+                                    $isProtectedAdmin = $user->email === 'nishant@gkv.ac.in';
+                                @endphp
                                 <form method="POST" action="{{ route('admin.users.toggle-status', $user->id) }}" class="inline" id="status-form-{{ $user->id }}">
                                     @csrf
-                                    <label class="relative inline-flex items-center cursor-pointer">
+                                    <label class="relative inline-flex items-center {{ $isProtectedAdmin ? 'cursor-not-allowed' : 'cursor-pointer' }}">
                                         <input 
                                             type="checkbox" 
                                             class="sr-only peer" 
                                             id="status-toggle-{{ $user->id }}"
                                             {{ $user->status === 'active' ? 'checked' : '' }}
-                                            onchange="toggleUserStatus({{ $user->id }})"
+                                            {{ $isProtectedAdmin ? 'disabled' : '' }}
+                                            onchange="{{ $isProtectedAdmin ? '' : "toggleUserStatus({$user->id})" }}"
                                         >
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                        <div class="w-11 h-6 {{ $isProtectedAdmin ? 'bg-gray-300 opacity-50' : 'bg-gray-200' }} peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                                         <span class="ml-3 text-sm font-medium {{ $user->status === 'active' ? 'text-green-600' : 'text-gray-500' }}" id="status-label-{{ $user->id }}">
                                             {{ ucfirst($user->status) }}
+                                            @if($isProtectedAdmin)
+                                                <span class="text-xs text-gray-500 ml-1">(Protected)</span>
+                                            @endif
                                         </span>
                                     </label>
                                 </form>
@@ -154,17 +150,25 @@
                             <td class="px-6 py-4">
                                 <div class="flex flex-wrap gap-2" id="roles-container-{{ $user->id }}">
                                     @foreach($roles as $role)
-                                        <label class="inline-flex items-center cursor-pointer">
+                                        @php
+                                            $isAdminRole = $role->name === 'admin';
+                                            $isDisabled = $isProtectedAdmin && $isAdminRole;
+                                        @endphp
+                                        <label class="inline-flex items-center {{ $isDisabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
                                             <input 
                                                 type="checkbox" 
                                                 class="sr-only peer role-checkbox" 
                                                 data-user-id="{{ $user->id }}"
                                                 data-role-name="{{ $role->name }}"
                                                 {{ $user->hasRole($role->name) ? 'checked' : '' }}
-                                                onchange="updateUserRoles({{ $user->id }})"
+                                                {{ $isDisabled ? 'disabled' : '' }}
+                                                onchange="{{ $isDisabled ? '' : "updateUserRoles({$user->id})" }}"
                                             >
-                                            <span class="px-3 py-1 text-xs rounded-full transition-colors {{ $user->hasRole($role->name) ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600' }} peer-checked:bg-indigo-100 peer-checked:text-indigo-800">
+                                            <span class="px-3 py-1 text-xs rounded-full transition-colors {{ $user->hasRole($role->name) ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600' }} {{ $isDisabled ? 'opacity-50' : '' }} peer-checked:bg-indigo-100 peer-checked:text-indigo-800">
                                                 {{ $role->name }}
+                                                @if($isDisabled)
+                                                    <span class="text-xs text-gray-500 ml-1">(Protected)</span>
+                                                @endif
                                             </span>
                                         </label>
                                     @endforeach
@@ -256,19 +260,26 @@
                 <!-- Status Toggle -->
                 <div class="flex items-center justify-between py-2 border-t border-gray-200">
                     <span class="text-sm font-medium text-gray-700">Account Status</span>
+                    @php
+                        $isProtectedAdmin = $user->email === 'nishant@gkv.ac.in';
+                    @endphp
                     <form method="POST" action="{{ route('admin.users.toggle-status', $user->id) }}" class="inline" id="status-form-mobile-{{ $user->id }}">
                         @csrf
-                        <label class="relative inline-flex items-center cursor-pointer">
+                        <label class="relative inline-flex items-center {{ $isProtectedAdmin ? 'cursor-not-allowed' : 'cursor-pointer' }}">
                             <input 
                                 type="checkbox" 
                                 class="sr-only peer" 
                                 id="status-toggle-mobile-{{ $user->id }}"
                                 {{ $user->status === 'active' ? 'checked' : '' }}
-                                onchange="toggleUserStatus({{ $user->id }})"
+                                {{ $isProtectedAdmin ? 'disabled' : '' }}
+                                onchange="{{ $isProtectedAdmin ? '' : "toggleUserStatus({$user->id})" }}"
                             >
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            <div class="w-11 h-6 {{ $isProtectedAdmin ? 'bg-gray-300 opacity-50' : 'bg-gray-200' }} peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                             <span class="ml-3 text-sm font-medium {{ $user->status === 'active' ? 'text-green-600' : 'text-gray-500' }}" id="status-label-mobile-{{ $user->id }}">
                                 {{ ucfirst($user->status) }}
+                                @if($isProtectedAdmin)
+                                    <span class="text-xs text-gray-500 ml-1">(Protected)</span>
+                                @endif
                             </span>
                         </label>
                     </form>
@@ -279,17 +290,25 @@
                     <div class="text-sm font-medium text-gray-700 mb-3">Roles</div>
                     <div class="flex flex-wrap gap-2" id="roles-container-mobile-{{ $user->id }}">
                         @foreach($roles as $role)
-                            <label class="inline-flex items-center cursor-pointer">
+                            @php
+                                $isAdminRole = $role->name === 'admin';
+                                $isDisabled = $isProtectedAdmin && $isAdminRole;
+                            @endphp
+                            <label class="inline-flex items-center {{ $isDisabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
                                 <input 
                                     type="checkbox" 
                                     class="sr-only peer role-checkbox" 
                                     data-user-id="{{ $user->id }}"
                                     data-role-name="{{ $role->name }}"
                                     {{ $user->hasRole($role->name) ? 'checked' : '' }}
-                                    onchange="updateUserRoles({{ $user->id }})"
+                                    {{ $isDisabled ? 'disabled' : '' }}
+                                    onchange="{{ $isDisabled ? '' : "updateUserRoles({$user->id})" }}"
                                 >
-                                <span class="px-3 py-1 text-xs rounded-full transition-colors {{ $user->hasRole($role->name) ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600' }} peer-checked:bg-indigo-100 peer-checked:text-indigo-800">
+                                <span class="px-3 py-1 text-xs rounded-full transition-colors {{ $user->hasRole($role->name) ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600' }} {{ $isDisabled ? 'opacity-50' : '' }} peer-checked:bg-indigo-100 peer-checked:text-indigo-800">
                                     {{ $role->name }}
+                                    @if($isDisabled)
+                                        <span class="text-xs text-gray-500 ml-1">(Protected)</span>
+                                    @endif
                                 </span>
                             </label>
                         @endforeach

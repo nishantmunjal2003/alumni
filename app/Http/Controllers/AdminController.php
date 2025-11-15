@@ -61,6 +61,29 @@ class AdminController extends Controller
 
     public function updateUserRoles(Request $request, User $user)
     {
+        // Prevent removing admin role from the protected admin account
+        if ($user->email === 'nishant@gkv.ac.in') {
+            $validated = $request->validate([
+                'roles' => 'array',
+            ]);
+
+            $roles = $validated['roles'] ?? [];
+
+            // Ensure admin role is always present
+            $adminRole = Role::where('name', 'admin')->first();
+            if ($adminRole && ! in_array('admin', $roles)) {
+                $roles[] = 'admin';
+            }
+
+            $user->syncRoles($roles);
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'User roles updated successfully! Note: Admin role is protected for this account.']);
+            }
+
+            return back()->with('success', 'User roles updated successfully! Note: Admin role is protected for this account.');
+        }
+
         $validated = $request->validate([
             'roles' => 'array',
         ]);
@@ -80,6 +103,15 @@ class AdminController extends Controller
      */
     public function toggleStatus(User $user)
     {
+        // Prevent deactivating the protected admin account
+        if ($user->email === 'nishant@gkv.ac.in') {
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'This admin account cannot be deactivated.'], 403);
+            }
+
+            return back()->with('error', 'This admin account cannot be deactivated.');
+        }
+
         $newStatus = $user->status === 'active' ? 'inactive' : 'active';
 
         $user->update([
