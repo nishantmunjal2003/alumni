@@ -6,20 +6,20 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="text-center">
-        <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Alumni World Map</h1>
-        <p class="mt-3 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+        <h1 class="text-4xl font-bold text-gray-900">Alumni World Map</h1>
+        <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">
             Discover where our alumni are located around the world. Connect with fellow alumni in your area!
         </p>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4 sm:p-6 transition-colors">
+    <div class="bg-white shadow rounded-lg p-4 sm:p-6">
         <form id="filter-form" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="passing_year" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Passing Year</label>
+                    <label for="passing_year" class="block text-sm font-medium text-gray-700 mb-2">Passing Year</label>
                     <select name="passing_year" id="passing_year" 
-                        class="w-full px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-colors">
+                        class="w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="">All Years</option>
                         @foreach($passingYears as $year)
                             <option value="{{ $year }}">{{ $year }}</option>
@@ -28,7 +28,7 @@
                 </div>
                 <div class="flex items-end">
                     <button type="submit" 
-                        class="w-full px-6 py-2 bg-indigo-600 dark:bg-indigo-500 text-white font-medium rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors inline-flex items-center justify-center gap-2">
+                        class="w-full px-6 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 inline-flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
@@ -40,30 +40,30 @@
     </div>
 
     <!-- Map Container -->
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden relative transition-colors">
+    <div class="bg-white shadow rounded-lg overflow-hidden relative">
         <div id="map" style="height: 600px; width: 100%;"></div>
-        <div id="map-loading" class="absolute inset-0 bg-white dark:bg-gray-800 bg-opacity-75 dark:bg-opacity-75 flex items-center justify-center z-50 transition-colors">
+        <div id="map-loading" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
             <div class="text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto"></div>
-                <p class="mt-4 text-gray-600 dark:text-gray-400">Loading alumni locations...</p>
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+                <p class="mt-4 text-gray-600">Loading alumni locations...</p>
             </div>
         </div>
     </div>
 
     <!-- Stats -->
-    <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 transition-colors">
+    <div class="bg-white shadow rounded-lg p-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="text-center">
-                <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="total-locations">0</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Locations</div>
+                <div class="text-2xl font-bold text-indigo-600" id="total-locations">0</div>
+                <div class="text-sm text-gray-600 mt-1">Locations</div>
             </div>
             <div class="text-center">
-                <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="total-alumni">0</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Total Alumni</div>
+                <div class="text-2xl font-bold text-indigo-600" id="total-alumni">0</div>
+                <div class="text-sm text-gray-600 mt-1">Total Alumni</div>
             </div>
             <div class="text-center">
-                <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="countries-count">0</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">Countries</div>
+                <div class="text-2xl font-bold text-indigo-600" id="countries-count">0</div>
+                <div class="text-sm text-gray-600 mt-1">Countries</div>
             </div>
         </div>
     </div>
@@ -75,31 +75,18 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
-    /* Dark mode support for Leaflet popups */
+    /* Leaflet popup styles */
     .leaflet-popup-content-wrapper {
-        background-color: var(--popup-bg, #ffffff);
-        color: var(--popup-text, #333333);
-    }
-    
-    .dark .leaflet-popup-content-wrapper {
-        background-color: #1f2937 !important;
-        color: #f3f4f6 !important;
+        background-color: #ffffff;
+        color: #333333;
     }
     
     .leaflet-popup-tip {
-        background-color: var(--popup-bg, #ffffff);
-    }
-    
-    .dark .leaflet-popup-tip {
-        background-color: #1f2937 !important;
+        background-color: #ffffff;
     }
     
     .leaflet-container {
-        background-color: var(--map-bg, #ffffff);
-    }
-    
-    .dark .leaflet-container {
-        background-color: #111827;
+        background-color: #ffffff;
     }
 </style>
 
@@ -109,56 +96,15 @@
     let markers = [];
     let geocodeCache = {};
 
-    // Check if dark mode is enabled
-    function isDarkMode() {
-        return document.documentElement.classList.contains('dark') || 
-               (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-
     // Initialize map
     function initMap() {
         map = L.map('map').setView([20, 0], 2);
         
-        // Use dark map tiles in dark mode
-        const isDark = isDarkMode();
-        const tileUrl = isDark 
-            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-            : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-        
-        L.tileLayer(tileUrl, {
-            attribution: isDark 
-                ? '© OpenStreetMap contributors © CARTO'
-                : '© OpenStreetMap contributors',
+        // Use light map tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
             maxZoom: 19,
         }).addTo(map);
-
-        // Listen for dark mode changes
-        let currentDarkMode = isDark;
-        const observer = new MutationObserver(() => {
-            const newIsDark = isDarkMode();
-            if (newIsDark !== currentDarkMode) {
-                currentDarkMode = newIsDark;
-                map.eachLayer((layer) => {
-                    if (layer instanceof L.TileLayer) {
-                        map.removeLayer(layer);
-                    }
-                });
-                const newTileUrl = newIsDark 
-                    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-                    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-                L.tileLayer(newTileUrl, {
-                    attribution: newIsDark 
-                        ? '© OpenStreetMap contributors © CARTO'
-                        : '© OpenStreetMap contributors',
-                    maxZoom: 19,
-                }).addTo(map);
-            }
-        });
-
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
     }
 
     // Geocode location using Nominatim API
@@ -235,20 +181,19 @@
                         return div.innerHTML;
                     };
 
-                    // Create popup content with dark mode support
-                    const darkMode = isDarkMode();
+                    // Create popup content
                     const popupContent = `
-                        <div class="p-2 min-w-[200px] max-w-[300px] ${darkMode ? 'dark' : ''}">
-                            <h3 class="font-bold text-lg mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}">${escapeHtml(location.city)}, ${escapeHtml(location.state || '')}</h3>
-                            <p class="text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2">${escapeHtml(location.country)}</p>
-                            <p class="text-sm font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}">${location.alumni.length} ${location.alumni.length === 1 ? 'Alumnus' : 'Alumni'}</p>
+                        <div class="p-2 min-w-[200px] max-w-[300px]">
+                            <h3 class="font-bold text-lg mb-2 text-gray-900">${escapeHtml(location.city)}, ${escapeHtml(location.state || '')}</h3>
+                            <p class="text-sm text-gray-600 mb-2">${escapeHtml(location.country)}</p>
+                            <p class="text-sm font-semibold mb-2 text-gray-700">${location.alumni.length} ${location.alumni.length === 1 ? 'Alumnus' : 'Alumni'}</p>
                             <div class="max-h-40 overflow-y-auto space-y-1">
                                 ${location.alumni.map(alumnus => `
-                                    <div class="text-xs border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} pb-1 pt-1">
-                                        <a href="{{ url('/alumni') }}/${alumnus.id}" target="_blank" class="font-semibold ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}">${escapeHtml(alumnus.name)}</a><br>
-                                        ${alumnus.passing_year ? `<span class="${darkMode ? 'text-gray-400' : 'text-gray-600'}">Year: ${escapeHtml(alumnus.passing_year)}</span>` : ''}
-                                        ${alumnus.course ? ` | <span class="${darkMode ? 'text-gray-400' : 'text-gray-600'}">${escapeHtml(alumnus.course)}</span>` : ''}
-                                        ${alumnus.company ? `<br><span class="${darkMode ? 'text-gray-400' : 'text-gray-600'}">${escapeHtml(alumnus.company)}</span>` : ''}
+                                    <div class="text-xs border-b border-gray-200 pb-1 pt-1">
+                                        <a href="{{ url('/alumni') }}/${alumnus.id}" target="_blank" class="font-semibold text-indigo-600 hover:text-indigo-800">${escapeHtml(alumnus.name)}</a><br>
+                                        ${alumnus.passing_year ? `<span class="text-gray-600">Year: ${escapeHtml(alumnus.passing_year)}</span>` : ''}
+                                        ${alumnus.course ? ` | <span class="text-gray-600">${escapeHtml(alumnus.course)}</span>` : ''}
+                                        ${alumnus.company ? `<br><span class="text-gray-600">${escapeHtml(alumnus.company)}</span>` : ''}
                                     </div>
                                 `).join('')}
                             </div>

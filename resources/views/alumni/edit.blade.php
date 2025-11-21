@@ -206,7 +206,7 @@
                             </div>
                             @if($user->profile_image)
                                 <div class="mt-3 flex items-center gap-4">
-                                    <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile Photo" class="h-24 w-24 rounded-full object-cover border-2 border-indigo-200">
+                                    <img src="{{ $user->profile_image_url }}" alt="Profile Photo" class="h-24 w-24 rounded-full object-cover border-2 border-indigo-200">
                                     <div>
                                         <p class="text-sm font-medium text-gray-700">Current Photo</p>
                                         <p class="text-xs text-gray-500">Click above to change</p>

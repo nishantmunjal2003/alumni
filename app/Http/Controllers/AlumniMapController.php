@@ -88,13 +88,12 @@ class AlumniMapController extends Controller
      */
     public function publicMap()
     {
-        // Get passing years that have active, approved alumni
+        // Get passing years that have non-deactivated alumni
         $passingYears = User::whereNotNull('passing_year')
             ->whereDoesntHave('roles', function ($q) {
                 $q->where('name', 'admin');
             })
-            ->where('status', 'active')
-            ->where('profile_status', 'approved')
+            ->where('status', '!=', 'inactive')
             ->distinct()
             ->orderBy('passing_year', 'desc')
             ->pluck('passing_year');
@@ -103,15 +102,14 @@ class AlumniMapController extends Controller
     }
 
     /**
-     * Get alumni location data for map (public - only active and approved).
+     * Get alumni location data for map (public - exclude deactivated users).
      */
     public function getPublicAlumniLocations(Request $request)
     {
         $query = User::whereDoesntHave('roles', function ($q) {
             $q->where('name', 'admin');
         })
-            ->where('status', 'active')
-            ->where('profile_status', 'approved')
+            ->where('status', '!=', 'inactive')
             ->whereNotNull('residence_country')
             ->whereNotNull('residence_city');
 

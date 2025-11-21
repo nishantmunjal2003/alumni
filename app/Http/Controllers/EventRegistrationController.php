@@ -51,8 +51,7 @@ class EventRegistrationController extends Controller
             'arrival_date' => 'nullable|date',
             'coming_from_city' => 'nullable|string|max:255',
             'arrival_time' => 'nullable|date_format:H:i',
-            'needs_stay' => 'boolean',
-            'coming_with_family' => 'boolean',
+            'needs_stay' => 'required|in:0,1',
             'travel_mode' => 'nullable|in:car,train,flight,bus,other',
             'return_journey_details' => 'nullable|string',
             'memories_description' => 'nullable|string',
@@ -63,8 +62,7 @@ class EventRegistrationController extends Controller
 
         $validated['user_id'] = auth()->id();
         $validated['event_id'] = $event->id;
-        $validated['needs_stay'] = $request->has('needs_stay');
-        $validated['coming_with_family'] = $request->has('coming_with_family');
+        $validated['needs_stay'] = $request->input('needs_stay') == '1';
 
         $registration = EventRegistration::create($validated);
 
@@ -104,8 +102,7 @@ class EventRegistrationController extends Controller
             'arrival_date' => 'nullable|date',
             'coming_from_city' => 'nullable|string|max:255',
             'arrival_time' => 'nullable|date_format:H:i',
-            'needs_stay' => 'boolean',
-            'coming_with_family' => 'boolean',
+            'needs_stay' => 'required|in:0,1',
             'travel_mode' => 'nullable|in:car,train,flight,bus,other',
             'return_journey_details' => 'nullable|string',
             'memories_description' => 'nullable|string',
@@ -114,8 +111,7 @@ class EventRegistrationController extends Controller
             'friend_ids' => 'nullable|array',
         ]);
 
-        $validated['needs_stay'] = $request->has('needs_stay');
-        $validated['coming_with_family'] = $request->has('coming_with_family');
+        $validated['needs_stay'] = $request->input('needs_stay') == '1';
 
         $registration->update($validated);
 

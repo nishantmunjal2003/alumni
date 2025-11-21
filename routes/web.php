@@ -13,7 +13,9 @@ use App\Http\Controllers\ProfileController;
 use App\Models\Campaign;
 use App\Models\Event;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Models\Role;
 
 // Public routes
 Route::get('/', function () {
@@ -29,8 +31,33 @@ Route::get('/', function () {
         ->limit(3)
         ->get();
 
-    $totalAlumni = User::where('status', 'active')
-        ->where('profile_status', 'approved')
+    // Get admin and manager user IDs to exclude from alumni count
+    $adminRoleId = Role::where('name', 'admin')->value('id');
+    $managerRoleId = Role::where('name', 'manager')->value('id');
+    
+    $excludedIds = [];
+    if ($adminRoleId) {
+        $adminIds = DB::table('model_has_roles')
+            ->where('role_id', $adminRoleId)
+            ->where('model_type', User::class)
+            ->pluck('model_id')
+            ->toArray();
+        $excludedIds = array_merge($excludedIds, $adminIds);
+    }
+    
+    if ($managerRoleId) {
+        $managerIds = DB::table('model_has_roles')
+            ->where('role_id', $managerRoleId)
+            ->where('model_type', User::class)
+            ->pluck('model_id')
+            ->toArray();
+        $excludedIds = array_merge($excludedIds, $managerIds);
+    }
+    
+    // Count all registered alumni (active or inactive), excluding admins and managers
+    $totalAlumni = User::when(!empty($excludedIds), function ($query) use ($excludedIds) {
+            return $query->whereNotIn('id', array_unique($excludedIds));
+        })
         ->count();
 
     $totalEvents = Event::where('status', 'published')->count();

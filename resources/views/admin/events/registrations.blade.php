@@ -59,7 +59,6 @@
                 <div class="space-y-2 text-sm">
                     <p><span class="font-medium">Total Registrations:</span> {{ $registrations->count() }}</p>
                     <p><span class="font-medium">Needs Stay:</span> {{ $registrations->where('needs_stay', true)->count() }}</p>
-                    <p><span class="font-medium">Coming With Family:</span> {{ $registrations->where('coming_with_family', true)->count() }}</p>
                 </div>
             </div>
         </div>

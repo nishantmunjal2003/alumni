@@ -219,4 +219,22 @@ class User extends Authenticatable
 
         return $daysRemaining > 0 ? $daysRemaining : 0;
     }
+
+    /**
+     * Get the profile image URL, handling both local storage and external URLs.
+     */
+    public function getProfileImageUrlAttribute(): ?string
+    {
+        if (! $this->profile_image) {
+            return null;
+        }
+
+        // Check if it's already a full URL (http:// or https://)
+        if (filter_var($this->profile_image, FILTER_VALIDATE_URL)) {
+            return $this->profile_image;
+        }
+
+        // Otherwise, treat it as a local storage path
+        return asset('storage/'.$this->profile_image);
+    }
 }

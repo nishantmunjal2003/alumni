@@ -90,7 +90,7 @@
                                         @if($user->profile_image)
                                             <img 
                                                 class="h-10 w-10 rounded-full object-cover" 
-                                                src="{{ asset('storage/' . $user->profile_image) }}" 
+                                                src="{{ $user->profile_image_url }}" 
                                                 alt="{{ $user->name }}"
                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                                             >

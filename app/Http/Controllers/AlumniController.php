@@ -29,6 +29,7 @@ class AlumniController extends Controller
 
         $upcomingEvents = \App\Models\Event::where('status', 'published')
             ->where('event_start_date', '>=', now())
+            ->withCount('registrations')
             ->orderBy('event_start_date', 'asc')
             ->limit(5)
             ->get();
@@ -42,10 +43,27 @@ class AlumniController extends Controller
 
     public function index(Request $request)
     {
-        $query = User::where('status', 'active')
-            ->whereDoesntHave('roles', function ($q) {
-                $q->where('name', 'admin');
-            });
+        // Get admin user IDs using subquery - more efficient than whereDoesntHave
+        $adminIds = cache()->remember('admin_user_ids', 3600, function () {
+            $adminRoleId = \Spatie\Permission\Models\Role::where('name', 'admin')->value('id');
+
+            if (! $adminRoleId) {
+                return [];
+            }
+
+            return \DB::table('model_has_roles')
+                ->where('role_id', $adminRoleId)
+                ->where('model_type', User::class)
+                ->pluck('model_id')
+                ->toArray();
+        });
+
+        $query = User::where('status', 'active');
+
+        // Only apply admin exclusion if there are admin IDs
+        if (! empty($adminIds)) {
+            $query->whereNotIn('id', $adminIds);
+        }
 
         // Only apply search filter if search term is not empty
         if ($request->filled('search')) {
@@ -75,15 +93,19 @@ class AlumniController extends Controller
             return view('alumni.partials.alumni-list', compact('alumni'))->render();
         }
 
-        // Only show passing years from non-admin users (alumni)
-        $passingYears = User::whereNotNull('passing_year')
-            ->where('status', 'active')
-            ->whereDoesntHave('roles', function ($q) {
-                $q->where('name', 'admin');
-            })
-            ->distinct()
-            ->orderBy('passing_year', 'desc')
-            ->pluck('passing_year');
+        // Cache passing years for 1 hour (only changes when users are added/updated)
+        $passingYears = cache()->remember('alumni_passing_years', 3600, function () use ($adminIds) {
+            $query = User::whereNotNull('passing_year')
+                ->where('status', 'active');
+
+            if (! empty($adminIds)) {
+                $query->whereNotIn('id', $adminIds);
+            }
+
+            return $query->distinct()
+                ->orderBy('passing_year', 'desc')
+                ->pluck('passing_year');
+        });
 
         return view('alumni.index', compact('alumni', 'passingYears'));
     }

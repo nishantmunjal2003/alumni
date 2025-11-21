@@ -13,7 +13,7 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 @if($conversation['user']->profile_image)
-                                    <img src="{{ asset('storage/' . $conversation['user']->profile_image) }}" alt="{{ $conversation['user']->name }}" class="w-12 h-12 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <img src="{{ $conversation['user']->profile_image_url }}" alt="{{ $conversation['user']->name }}" class="w-12 h-12 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                     <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center hidden">
                                         <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-xs">{{ getUserInitials($conversation['user']->name) }}</span>
                                     </div>

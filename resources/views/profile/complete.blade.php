@@ -3,6 +3,56 @@
 @section('title', 'Complete Your Profile')
 
 @section('content')
+<style>
+    /* Force light mode - override any dark mode styles */
+    html, body {
+        color-scheme: light !important;
+    }
+    html.dark, body.dark {
+        background-color: #f9fafb !important;
+    }
+    html.dark *, body.dark * {
+        --tw-bg-opacity: 1;
+    }
+</style>
+<script>
+    // Force light mode on profile edit page
+    (function() {
+        // Remove dark class immediately
+        document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
+        
+        // Prevent dark mode from being applied
+        const removeDarkMode = function() {
+            document.documentElement.classList.remove('dark');
+            document.body.classList.remove('dark');
+        };
+        
+        // Remove on DOMContentLoaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', removeDarkMode);
+        } else {
+            removeDarkMode();
+        }
+        
+        // Watch for any attempts to add dark class
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    removeDarkMode();
+                }
+            });
+        });
+        
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        
+        // Also remove on any class changes via setTimeout
+        setTimeout(removeDarkMode, 0);
+        setTimeout(removeDarkMode, 100);
+        setTimeout(removeDarkMode, 500);
+    })();
+</script>
 <div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <div class="bg-white shadow-lg rounded-xl overflow-hidden">
         <!-- Header Section -->
@@ -238,7 +288,7 @@
                         </div>
                         @if($user->profile_image)
                             <div class="mt-3 flex items-center gap-4">
-                                <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile Photo" class="h-24 w-24 rounded-full object-cover border-2 border-indigo-200">
+                                <img src="{{ $user->profile_image_url }}" alt="Profile Photo" class="h-24 w-24 rounded-full object-cover border-2 border-indigo-200">
                                 <div>
                                     <p class="text-sm font-medium text-gray-700">Current Photo</p>
                                     <p class="text-xs text-gray-500">Click above to change</p>

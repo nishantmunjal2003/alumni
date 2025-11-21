@@ -14,7 +14,7 @@
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex items-center gap-3 flex-1">
                         @if($alumnus->profile_image)
-                            <img src="{{ asset('storage/' . $alumnus->profile_image) }}" alt="{{ $alumnus->name }}" class="w-12 h-12 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <img src="{{ $alumnus->profile_image_url }}" alt="{{ $alumnus->name }}" class="w-12 h-12 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center hidden">
                                 <span class="text-indigo-600 font-semibold text-xs">{{ getUserInitials($alumnus->name) }}</span>
                             </div>
@@ -179,7 +179,7 @@
                             <td class="px-4 py-3">
                                 <div class="flex items-center min-w-0">
                                     @if($alumnus->profile_image)
-                                        <img src="{{ asset('storage/' . $alumnus->profile_image) }}" alt="{{ $alumnus->name }}" class="w-8 h-8 rounded-full object-cover mr-2 flex-shrink-0" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <img src="{{ $alumnus->profile_image_url }}" alt="{{ $alumnus->name }}" class="w-8 h-8 rounded-full object-cover mr-2 flex-shrink-0" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-2 flex-shrink-0 hidden">
                                             <span class="text-indigo-600 font-semibold text-xs">{{ getUserInitials($alumnus->name) }}</span>
                                         </div>

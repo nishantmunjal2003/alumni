@@ -98,7 +98,7 @@
                 @if($user->profile_image)
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Profile Photo</label>
-                        <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile Photo" class="mt-2 h-32 w-32 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <img src="{{ $user->profile_image_url }}" alt="Profile Photo" class="mt-2 h-32 w-32 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="mt-2 h-32 w-32 rounded-full bg-indigo-100 flex items-center justify-center hidden">
                             <span class="text-indigo-600 font-semibold text-2xl">{{ getUserInitials($user->name) }}</span>
                         </div>

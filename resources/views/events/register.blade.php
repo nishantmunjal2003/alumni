@@ -93,17 +93,22 @@
                     Accommodation & Preferences
                 </h3>
                 <div class="space-y-4">
-                    <div class="flex items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <input type="checkbox" name="needs_stay" id="needs_stay" value="1" {{ old('needs_stay') ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                        <label for="needs_stay" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            I need accommodation/stay arrangements
-                        </label>
-                    </div>
-                    <div class="flex items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <input type="checkbox" name="coming_with_family" id="coming_with_family" value="1" {{ old('coming_with_family') ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                        <label for="coming_with_family" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Coming with family
-                        </label>
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Accommodation</label>
+                        <div class="space-y-2">
+                            <div class="flex items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                                <input type="radio" name="needs_stay" id="needs_stay_yes" value="1" {{ old('needs_stay') == '1' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                                <label for="needs_stay_yes" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    I need accommodation
+                                </label>
+                            </div>
+                            <div class="flex items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                                <input type="radio" name="needs_stay" id="needs_stay_no" value="0" {{ old('needs_stay', '0') == '0' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                                <label for="needs_stay_no" class="ml-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Stay Not Required
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

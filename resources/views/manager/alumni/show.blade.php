@@ -87,7 +87,7 @@
                 @if($user->profile_image)
                     <div>
                         <label class="block text-sm font-medium text-gray-500">Profile Photo</label>
-                        <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile Photo" class="mt-2 h-32 w-32 rounded-full object-cover">
+                        <img src="{{ $user->profile_image_url }}" alt="Profile Photo" class="mt-2 h-32 w-32 rounded-full object-cover">
                     </div>
                 @endif
             </div>

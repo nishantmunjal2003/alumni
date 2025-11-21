@@ -7,13 +7,13 @@
     <div class="bg-white shadow rounded-lg p-6">
         <div class="flex items-start space-x-6">
             @if($alumni->profile_image)
-                <img src="{{ asset('storage/' . $alumni->profile_image) }}" alt="{{ $alumni->name }}" class="w-32 h-32 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="w-32 h-32 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center hidden">
-                    <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-2xl">{{ getUserInitials($alumni->name) }}</span>
+                <img src="{{ $alumni->profile_image_url }}" alt="{{ $alumni->name }}" class="w-32 h-32 rounded-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="w-32 h-32 rounded-full bg-indigo-100 flex items-center justify-center hidden">
+                    <span class="text-indigo-600 font-semibold text-2xl">{{ getUserInitials($alumni->name) }}</span>
                 </div>
             @else
-                <div class="w-32 h-32 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                    <span class="text-indigo-600 dark:text-indigo-400 font-semibold text-2xl">{{ getUserInitials($alumni->name) }}</span>
+                <div class="w-32 h-32 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <span class="text-indigo-600 font-semibold text-2xl">{{ getUserInitials($alumni->name) }}</span>
                 </div>
             @endif
             <div class="flex-1">
