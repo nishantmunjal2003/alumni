@@ -18,15 +18,36 @@
 <script>
     // Force light mode on profile edit page
     (function() {
-        // Remove dark class immediately
-        document.documentElement.classList.remove('dark');
-        document.body.classList.remove('dark');
+        let isRemoving = false;
         
         // Prevent dark mode from being applied
         const removeDarkMode = function() {
-            document.documentElement.classList.remove('dark');
-            document.body.classList.remove('dark');
+            // Prevent infinite loop by checking if we're already removing
+            if (isRemoving) {
+                return;
+            }
+            
+            // Only remove if dark class is actually present
+            const htmlHasDark = document.documentElement.classList.contains('dark');
+            const bodyHasDark = document.body.classList.contains('dark');
+            
+            if (htmlHasDark || bodyHasDark) {
+                isRemoving = true;
+                if (htmlHasDark) {
+                    document.documentElement.classList.remove('dark');
+                }
+                if (bodyHasDark) {
+                    document.body.classList.remove('dark');
+                }
+                // Reset flag after a short delay to allow DOM to update
+                setTimeout(() => {
+                    isRemoving = false;
+                }, 10);
+            }
         };
+        
+        // Remove dark class immediately
+        removeDarkMode();
         
         // Remove on DOMContentLoaded
         if (document.readyState === 'loading') {
@@ -39,18 +60,17 @@
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    removeDarkMode();
+                    const target = mutation.target;
+                    // Only act if dark class was actually added
+                    if (target.classList.contains('dark')) {
+                        removeDarkMode();
+                    }
                 }
             });
         });
         
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
         observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-        
-        // Also remove on any class changes via setTimeout
-        setTimeout(removeDarkMode, 0);
-        setTimeout(removeDarkMode, 100);
-        setTimeout(removeDarkMode, 500);
     })();
 </script>
 <div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">

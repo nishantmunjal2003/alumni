@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProfileRequest;
-use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
@@ -25,7 +22,7 @@ class ProfileController extends Controller
         $courses = $this->getCourses();
         $years = $this->getYears();
         $isEdit = false;
-        
+
         return view('profile.complete', compact('user', 'countries', 'courses', 'years', 'isEdit'));
     }
 
@@ -35,11 +32,17 @@ class ProfileController extends Controller
     public function edit()
     {
         $user = auth()->user();
+
+        // Eager load roles to avoid N+1 queries
+        if (! $user->relationLoaded('roles')) {
+            $user->load('roles');
+        }
+
         $countries = $this->getCountries();
         $courses = $this->getCourses();
         $years = $this->getYears();
         $isEdit = true;
-        
+
         return view('profile.complete', compact('user', 'countries', 'courses', 'years', 'isEdit'));
     }
 
@@ -52,11 +55,11 @@ class ProfileController extends Controller
     {
         $currentYear = (int) date('Y');
         $years = [];
-        
+
         for ($year = $currentYear; $year >= 1980; $year--) {
             $years[] = $year;
         }
-        
+
         return $years;
     }
 
@@ -193,17 +196,17 @@ class ProfileController extends Controller
         // Mark profile as completed and set status to pending for admin approval
         $validated['profile_completed'] = true;
         $validated['profile_status'] = 'pending';
-        
+
         // Set profile submission timestamp if not already set
-        if (!$user->profile_submitted_at) {
+        if (! $user->profile_submitted_at) {
             $validated['profile_submitted_at'] = now();
         }
 
         $user->update($validated);
 
         $message = 'Profile submitted successfully! You can now access the dashboard.';
-        
-        if (!$user->proof_document) {
+
+        if (! $user->proof_document) {
             $message .= ' Please note: Upload your proof document within 7 days to avoid account deactivation.';
         }
 
@@ -243,10 +246,10 @@ class ProfileController extends Controller
 
         // Don't change profile_status on update - keep current status
         // Only update if profile was not completed before
-        if (!$user->profile_completed) {
+        if (! $user->profile_completed) {
             $validated['profile_completed'] = true;
             $validated['profile_status'] = 'pending';
-            if (!$user->profile_submitted_at) {
+            if (! $user->profile_submitted_at) {
                 $validated['profile_submitted_at'] = now();
             }
         } else {
@@ -257,9 +260,9 @@ class ProfileController extends Controller
         $user->update($validated);
 
         $message = 'Profile updated successfully!';
-        
+
         // If proof was missing and now uploaded, reset the warning
-        if ($request->hasFile('proof_document') && !$user->proof_document) {
+        if ($request->hasFile('proof_document') && ! $user->proof_document) {
             $message .= ' Your proof document has been uploaded.';
         }
 

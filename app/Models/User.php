@@ -181,6 +181,11 @@ class User extends Authenticatable
      */
     public function canAccessDashboard(): bool
     {
+        // Eager load roles if not already loaded to avoid N+1 queries
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
         // Admins and managers can always access dashboard
         if ($this->hasRole('admin') || $this->hasRole('manager')) {
             return true;
