@@ -45,4 +45,9 @@ return [
         'api_key' => env('TINYMCE_API_KEY', 'no-api-key'),
     ],
 
+    'zeptomail' => [
+        'api_key' => env('ZEPTOMAIL_API_KEY'),
+        'api_url' => env('ZEPTOMAIL_API_URL', 'https://api.zeptomail.com/v1.1/email'),
+    ],
+
 ];

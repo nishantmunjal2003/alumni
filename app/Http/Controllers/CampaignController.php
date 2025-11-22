@@ -197,19 +197,20 @@ class CampaignController extends Controller
                 ->where('status', 'active')
                 ->get();
 
-            $sentCount = 0;
+            // Queue all emails instead of sending synchronously
+            $queuedCount = 0;
             foreach ($recipients as $recipient) {
                 try {
-                    Mail::to($recipient->email)->send(new \App\Mail\AlumniEmail($recipient, $validated['subject'], $validated['message']));
-                    $sentCount++;
+                    Mail::to($recipient->email)->queue(new \App\Mail\AlumniEmail($recipient, $validated['subject'], $validated['message']));
+                    $queuedCount++;
                 } catch (\Exception $e) {
                     // Log error but continue with other recipients
-                    \Log::error("Failed to send campaign email to {$recipient->email}: ".$e->getMessage());
+                    \Log::error("Failed to queue campaign email to {$recipient->email}: ".$e->getMessage());
                 }
             }
 
             return redirect()->route('admin.campaigns.index')
-                ->with('success', "Campaign announcement sent successfully to {$sentCount} out of {$recipients->count()} alumni.");
+                ->with('success', "{$queuedCount} campaign emails have been queued for sending. Emails will be sent in the background.");
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()

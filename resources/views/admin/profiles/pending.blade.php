@@ -16,183 +16,155 @@
                 {{ $count == 1 ? 'profile' : 'profiles' }} pending approval
             </p>
         </div>
-        <a href="{{ route('admin.dashboard') }}" class="text-sm text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
-            Back to Dashboard
-        </a>
+        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <a href="{{ route('admin.profiles.missing-details.email', ['missing_type' => 'proof_document']) }}" class="text-sm text-white bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-md inline-flex items-center justify-center gap-1 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                Email Missing Details
+            </a>
+            <a href="{{ route('admin.dashboard') }}" class="text-sm text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Dashboard
+            </a>
+        </div>
     </div>
 
-    @if($pendingProfiles->isEmpty())
-        <div class="bg-white shadow rounded-lg p-6 text-center">
-            <p class="text-gray-500">No pending profiles at the moment.</p>
-        </div>
-    @else
-        <!-- Mobile Card View -->
-        <div class="block md:hidden space-y-4">
-            @foreach($pendingProfiles as $index => $profile)
-                <div class="bg-white shadow rounded-lg p-4 space-y-3">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-start gap-3 flex-1">
-                            <span class="text-sm font-semibold text-indigo-600 mt-1">#{{ ($pendingProfiles->currentPage() - 1) * $pendingProfiles->perPage() + $index + 1 }}</span>
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900">{{ $profile->name }}</h3>
-                                <p class="text-sm text-gray-600 mt-1">{{ $profile->email }}</p>
-                            </div>
-                        </div>
-                        @if($profile->proof_document)
-                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 whitespace-nowrap">Uploaded</span>
-                        @else
-                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 whitespace-nowrap">Missing</span>
-                        @endif
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                            <span class="text-gray-500">Course:</span>
-                            <span class="text-gray-900 ml-1">{{ $profile->course ?? 'N/A' }}</span>
-                        </div>
-                        <div>
-                            <span class="text-gray-500">Year:</span>
-                            <span class="text-gray-900 ml-1">{{ $profile->passing_year ?? 'N/A' }}</span>
-                        </div>
-                        <div class="col-span-2">
-                            <span class="text-gray-500">Company:</span>
-                            <span class="text-gray-900 ml-1">{{ $profile->company ?? 'N/A' }}</span>
-                        </div>
-                        <div class="col-span-2">
-                            <span class="text-gray-500">Submitted:</span>
-                            <span class="text-gray-900 ml-1">{{ $profile->updated_at->diffForHumans() }}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="flex flex-col gap-2 pt-2 border-t border-gray-200">
-                        <a href="{{ route('admin.profiles.view', $profile->id) }}" class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors touch-manipulation">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+    <!-- Search Form -->
+    <div class="bg-white shadow rounded-lg p-4">
+        <form method="GET" action="{{ route('admin.profiles.pending') }}" id="search-form" class="space-y-3">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <label for="search" class="sr-only">Search</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
-                            View Profile
-                        </a>
-                        <div class="grid grid-cols-2 gap-2">
-                            <form method="POST" action="{{ route('admin.profiles.approve', $profile->id) }}" class="inline">
-                                @csrf
-                                <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors touch-manipulation" onclick="return confirm('Are you sure you want to approve this profile?')">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Approve
-                                </button>
-                            </form>
-                            <form method="POST" action="{{ route('admin.profiles.block', $profile->id) }}" class="inline">
-                                @csrf
-                                <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors touch-manipulation" onclick="return confirm('Are you sure you want to block this profile?')">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                    Block
-                                </button>
-                            </form>
                         </div>
+                        <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="Search by name, email, enrollment, course, company, or year..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                     </div>
                 </div>
-            @endforeach
-        </div>
-
-        <!-- Desktop Table View -->
-        <div class="hidden md:block bg-white shadow rounded-lg overflow-hidden">
-            <div class="overflow-hidden border border-gray-200 rounded-lg">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">S.No.</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">Name</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">Email</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Course</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Year</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32 max-w-[8rem]">Company</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Proof</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Submitted</th>
-                            <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-44">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($pendingProfiles as $index => $profile)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-3 py-2">
-                                    <div class="text-sm font-medium text-gray-900">{{ ($pendingProfiles->currentPage() - 1) * $pendingProfiles->perPage() + $index + 1 }}</div>
-                                </td>
-                                <td class="px-3 py-2">
-                                    <div class="text-sm font-medium text-gray-900 truncate max-w-[9rem]" title="{{ $profile->name }}">{{ $profile->name }}</div>
-                                </td>
-                                <td class="px-3 py-2">
-                                    <div class="text-sm text-gray-900 truncate max-w-[12rem]" title="{{ $profile->email }}">{{ $profile->email }}</div>
-                                </td>
-                                <td class="px-3 py-2">
-                                    <div class="text-sm text-gray-900 truncate max-w-[8rem]" title="{{ $profile->course ?? 'N/A' }}">{{ $profile->course ?? 'N/A' }}</div>
-                                </td>
-                                <td class="px-3 py-2">
-                                    <div class="text-sm text-gray-900">{{ $profile->passing_year ?? 'N/A' }}</div>
-                                </td>
-                                <td class="px-3 py-2">
-                                    <div class="text-sm text-gray-900 truncate max-w-[8rem]" title="{{ $profile->company ?? 'N/A' }}">{{ $profile->company ?? 'N/A' }}</div>
-                                </td>
-                                <td class="px-3 py-2">
-                                    @if($profile->proof_document)
-                                        <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 whitespace-nowrap">Uploaded</span>
-                                    @else
-                                        <span class="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-800 whitespace-nowrap">Missing</span>
-                                    @endif
-                                </td>
-                                <td class="px-3 py-2">
-                                    <div class="text-sm text-gray-900 whitespace-nowrap">{{ $profile->updated_at->diffForHumans() }}</div>
-                                </td>
-                                <td class="px-3 py-2">
-                                    <div class="flex gap-1 flex-nowrap">
-                                        <a href="{{ route('admin.profiles.view', $profile->id) }}" class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors whitespace-nowrap flex-shrink-0">
-                                            <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                            View
-                                        </a>
-                                        <form method="POST" action="{{ route('admin.profiles.approve', $profile->id) }}" class="inline flex-shrink-0">
-                                            @csrf
-                                            <button type="submit" class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded transition-colors whitespace-nowrap" onclick="return confirm('Are you sure you want to approve this profile?')">
-                                                <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                </svg>
-                                                Approve
-                                            </button>
-                                        </form>
-                                        <form method="POST" action="{{ route('admin.profiles.block', $profile->id) }}" class="inline flex-shrink-0">
-                                            @csrf
-                                            <button type="submit" class="inline-flex items-center px-2 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded transition-colors whitespace-nowrap" onclick="return confirm('Are you sure you want to block this profile?')">
-                                                <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                </svg>
-                                                Block
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                <div class="sm:w-48">
+                    <label for="proof_filter" class="block text-sm font-medium text-gray-700 mb-1">Proof Document</label>
+                    <select name="proof_filter" id="proof_filter" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">All</option>
+                        <option value="uploaded" {{ request('proof_filter') === 'uploaded' ? 'selected' : '' }}>Uploaded</option>
+                        <option value="missing" {{ request('proof_filter') === 'missing' ? 'selected' : '' }}>Missing</option>
+                    </select>
+                </div>
             </div>
-            <div class="px-4 py-3 border-t border-gray-200">
-                {{ $pendingProfiles->links() }}
+            <div class="flex gap-2">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Search
+                </button>
+                @if(request('search') || request('proof_filter'))
+                    <a href="{{ route('admin.profiles.pending') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Clear Filters
+                    </a>
+                @endif
             </div>
-        </div>
+        </form>
+    </div>
 
-        <!-- Mobile Pagination -->
-        <div class="block md:hidden">
-            {{ $pendingProfiles->links() }}
-        </div>
-    @endif
+    <!-- Profiles List Container -->
+    <div id="profiles-list">
+        @include('admin.profiles.partials.pending-list', ['pendingProfiles' => $pendingProfiles])
+    </div>
 </div>
+
+<script>
+(function() {
+    const searchInput = document.getElementById('search');
+    const proofFilter = document.getElementById('proof_filter');
+    const profilesList = document.getElementById('profiles-list');
+    const searchForm = document.getElementById('search-form');
+    let searchTimeout = null;
+    let isSearching = false;
+
+    function performSearch() {
+        if (isSearching) {
+            return;
+        }
+
+        isSearching = true;
+        const params = new URLSearchParams();
+        
+        const searchValue = searchInput.value.trim();
+        const proofFilterValue = proofFilter.value;
+        
+        if (searchValue) {
+            params.append('search', searchValue);
+        }
+        
+        if (proofFilterValue) {
+            params.append('proof_filter', proofFilterValue);
+        }
+
+        // Show loading state
+        const originalContent = profilesList.innerHTML;
+        profilesList.innerHTML = '<div class="flex items-center justify-center py-12"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div><span class="ml-3 text-gray-600">Searching...</span></div>';
+
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+        const url = '{{ route("admin.profiles.pending") }}' + (params.toString() ? '?' + params.toString() : '');
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            signal: controller.signal
+        })
+        .then(response => {
+            clearTimeout(timeoutId);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(html => {
+            profilesList.innerHTML = html;
+            isSearching = false;
+        })
+        .catch(error => {
+            clearTimeout(timeoutId);
+            console.error('Search error:', error);
+            if (error.name === 'AbortError') {
+                profilesList.innerHTML = '<div class="bg-white shadow rounded-lg p-6 text-center"><p class="text-red-600">Request timed out. Please try again.</p></div>';
+            } else {
+                profilesList.innerHTML = '<div class="bg-white shadow rounded-lg p-6 text-center"><p class="text-red-600">An error occurred while searching. Please try again.</p></div>';
+            }
+            isSearching = false;
+        });
+    }
+
+    // Real-time search on input change with debouncing
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 300); // Wait 300ms after user stops typing
+    });
+
+    // Filter change handler
+    proofFilter.addEventListener('change', function() {
+        clearTimeout(searchTimeout);
+        performSearch();
+    });
+
+    // Form submit handler
+    searchForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        clearTimeout(searchTimeout);
+        performSearch();
+    });
+})();
+</script>
 @endsection
 
 

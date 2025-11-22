@@ -181,11 +181,6 @@ class User extends Authenticatable
      */
     public function canAccessDashboard(): bool
     {
-        // Eager load roles if not already loaded to avoid N+1 queries
-        if (! $this->relationLoaded('roles')) {
-            $this->load('roles');
-        }
-
         // Admins and managers can always access dashboard
         if ($this->hasRole('admin') || $this->hasRole('manager')) {
             return true;
@@ -223,23 +218,5 @@ class User extends Authenticatable
         $daysRemaining = now()->diffInDays($deactivationDate, false);
 
         return $daysRemaining > 0 ? $daysRemaining : 0;
-    }
-
-    /**
-     * Get the profile image URL, handling both local storage and external URLs.
-     */
-    public function getProfileImageUrlAttribute(): ?string
-    {
-        if (! $this->profile_image) {
-            return null;
-        }
-
-        // Check if it's already a full URL (http:// or https://)
-        if (filter_var($this->profile_image, FILTER_VALIDATE_URL)) {
-            return $this->profile_image;
-        }
-
-        // Otherwise, treat it as a local storage path
-        return asset('storage/'.$this->profile_image);
     }
 }

@@ -33,7 +33,19 @@ class AlumniMapController extends Controller
             $q->where('name', 'admin');
         })
             ->whereNotNull('residence_country')
-            ->whereNotNull('residence_city');
+            ->where(function ($q) {
+                // Show alumni who have country AND (address OR city)
+                $q->where(function ($subQ) {
+                    $subQ->whereNotNull('residence_address')
+                        ->where('residence_address', '!=', '')
+                        ->whereRaw("TRIM(residence_address) != ''");
+                })
+                    ->orWhere(function ($subQ) {
+                        $subQ->whereNotNull('residence_city')
+                            ->where('residence_city', '!=', '')
+                            ->whereRaw("TRIM(residence_city) != ''");
+                    });
+            });
 
         // Apply filters if provided
         if ($request->filled('passing_year')) {
@@ -48,20 +60,31 @@ class AlumniMapController extends Controller
             $query->where('profile_status', $request->profile_status);
         }
 
-        $alumni = $query->select('id', 'name', 'email', 'residence_city', 'residence_state', 'residence_country', 'passing_year', 'course', 'company', 'profile_image')
+        $alumni = $query->select('id', 'name', 'email', 'residence_address', 'residence_city', 'residence_state', 'residence_country', 'passing_year', 'course', 'company', 'profile_image')
             ->get();
 
         // Group by location and prepare data
         $locations = [];
         foreach ($alumni as $alumnus) {
-            $locationKey = strtolower(trim($alumnus->residence_city.', '.$alumnus->residence_state.', '.$alumnus->residence_country));
+            // Build location string: prefer city+state+country, fallback to address+country if no city
+            $locationParts = [];
+            if ($alumnus->residence_city) {
+                $locationParts[] = $alumnus->residence_city;
+            }
+            if ($alumnus->residence_state) {
+                $locationParts[] = $alumnus->residence_state;
+            }
+            $locationParts[] = $alumnus->residence_country;
+
+            $locationString = implode(', ', $locationParts);
+            $locationKey = strtolower($locationString);
 
             if (! isset($locations[$locationKey])) {
                 $locations[$locationKey] = [
                     'city' => $alumnus->residence_city,
                     'state' => $alumnus->residence_state,
                     'country' => $alumnus->residence_country,
-                    'location_string' => trim($alumnus->residence_city.', '.$alumnus->residence_state.', '.$alumnus->residence_country),
+                    'location_string' => $locationString,
                     'alumni' => [],
                 ];
             }
@@ -111,27 +134,50 @@ class AlumniMapController extends Controller
         })
             ->where('status', '!=', 'inactive')
             ->whereNotNull('residence_country')
-            ->whereNotNull('residence_city');
+            ->where(function ($q) {
+                // Show alumni who have country AND (address OR city)
+                $q->where(function ($subQ) {
+                    $subQ->whereNotNull('residence_address')
+                        ->where('residence_address', '!=', '')
+                        ->whereRaw("TRIM(residence_address) != ''");
+                })
+                    ->orWhere(function ($subQ) {
+                        $subQ->whereNotNull('residence_city')
+                            ->where('residence_city', '!=', '')
+                            ->whereRaw("TRIM(residence_city) != ''");
+                    });
+            });
 
         // Apply filters if provided
         if ($request->filled('passing_year')) {
             $query->where('passing_year', $request->passing_year);
         }
 
-        $alumni = $query->select('id', 'name', 'email', 'residence_city', 'residence_state', 'residence_country', 'passing_year', 'course', 'company', 'profile_image')
+        $alumni = $query->select('id', 'name', 'email', 'residence_address', 'residence_city', 'residence_state', 'residence_country', 'passing_year', 'course', 'company', 'profile_image')
             ->get();
 
         // Group by location and prepare data
         $locations = [];
         foreach ($alumni as $alumnus) {
-            $locationKey = strtolower(trim($alumnus->residence_city.', '.$alumnus->residence_state.', '.$alumnus->residence_country));
+            // Build location string: prefer city+state+country, fallback to address+country if no city
+            $locationParts = [];
+            if ($alumnus->residence_city) {
+                $locationParts[] = $alumnus->residence_city;
+            }
+            if ($alumnus->residence_state) {
+                $locationParts[] = $alumnus->residence_state;
+            }
+            $locationParts[] = $alumnus->residence_country;
+
+            $locationString = implode(', ', $locationParts);
+            $locationKey = strtolower($locationString);
 
             if (! isset($locations[$locationKey])) {
                 $locations[$locationKey] = [
                     'city' => $alumnus->residence_city,
                     'state' => $alumnus->residence_state,
                     'country' => $alumnus->residence_country,
-                    'location_string' => trim($alumnus->residence_city.', '.$alumnus->residence_state.', '.$alumnus->residence_country),
+                    'location_string' => $locationString,
                     'alumni' => [],
                 ];
             }

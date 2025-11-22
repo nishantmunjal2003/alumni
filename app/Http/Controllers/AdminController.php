@@ -19,7 +19,6 @@ class AdminController extends Controller
     public function dashboard()
     {
         // Use a single query with selectRaw to get multiple counts efficiently
-        // total_users counts ALL users regardless of status (active, inactive, or any other status)
         $userStats = User::selectRaw('
             COUNT(*) as total_users,
             SUM(CASE WHEN status = "active" THEN 1 ELSE 0 END) as active_users,

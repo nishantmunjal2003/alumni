@@ -193,19 +193,57 @@
         });
     }
 
-    // Geocode location using Nominatim API
-    async function geocodeLocation(locationString) {
+    // Geocode location using Nominatim API with timeout
+    async function geocodeLocation(locationString, loadingDiv = null) {
         if (geocodeCache[locationString]) {
             return geocodeCache[locationString];
         }
 
+        // Check localStorage for persistent cache
+        const cacheKey = 'geocode_' + locationString;
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            try {
+                const result = JSON.parse(cached);
+                geocodeCache[locationString] = result;
+                return result;
+            } catch (e) {
+                // Invalid cache, continue
+            }
+        }
+
+        // Ensure loading indicator is visible during geocoding (for the full 5 seconds)
+        if (loadingDiv) {
+            loadingDiv.style.display = 'flex';
+        }
+
         try {
+            // Add timeout to prevent hanging requests (5 seconds)
+            const controller = new AbortController();
+            let timeoutId;
+            
+            // Keep loading visible for at least 5 seconds
+            const loadingTimeout = loadingDiv ? setTimeout(() => {
+                // Ensure loading stays visible during the timeout period
+                if (loadingDiv) {
+                    loadingDiv.style.display = 'flex';
+                }
+            }, 100) : null;
+            
+            timeoutId = setTimeout(() => {
+                controller.abort();
+                if (loadingTimeout) clearTimeout(loadingTimeout);
+            }, 5000); // 5 second timeout
+            
             const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationString)}&limit=1`, {
                 headers: {
                     'User-Agent': 'Alumni Portal'
-                }
+                },
+                signal: controller.signal
             });
             
+            clearTimeout(timeoutId);
+            if (loadingTimeout) clearTimeout(loadingTimeout);
             const data = await response.json();
             
             if (data && data.length > 0) {
@@ -214,10 +252,18 @@
                     lon: parseFloat(data[0].lon),
                 };
                 geocodeCache[locationString] = result;
+                // Store in localStorage for persistent cache
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(result));
+                } catch (e) {
+                    // localStorage might be full, ignore
+                }
                 return result;
             }
         } catch (error) {
-            console.error('Geocoding error:', error);
+            if (error.name !== 'AbortError') {
+                console.error('Geocoding error:', error);
+            }
         }
         
         return null;
@@ -227,6 +273,47 @@
     function clearMarkers() {
         markers.forEach(marker => map.removeLayer(marker));
         markers = [];
+    }
+
+    // Process locations in batches for parallel geocoding
+    // Use larger batches and minimal delay for better performance
+    async function processLocationsBatch(locations, batchSize = 20) {
+        const loadingDiv = document.getElementById('map-loading');
+        const results = [];
+        const updateProgress = (current, total, message = '') => {
+            if (loadingDiv) {
+                const progressText = loadingDiv.querySelector('p');
+                if (progressText) {
+                    progressText.textContent = message || `Geocoding ${current} of ${total} locations...`;
+                }
+                // Ensure loading is visible
+                loadingDiv.style.display = 'flex';
+            }
+        };
+
+        // Show initial loading state
+        updateProgress(0, locations.length, 'Starting geocoding...');
+
+        for (let i = 0; i < locations.length; i += batchSize) {
+            const batch = locations.slice(i, i + batchSize);
+            const current = Math.min(i + batchSize, locations.length);
+            updateProgress(current, locations.length, `Geocoding ${current} of ${locations.length} locations...`);
+            
+            // Process all locations in batch in parallel
+            const batchPromises = batch.map(location => geocodeLocation(location.location_string, loadingDiv));
+            const batchResults = await Promise.all(batchPromises);
+            results.push(...batchResults.map((coords, idx) => ({
+                location: batch[idx],
+                coordinates: coords
+            })));
+            
+            // Very minimal delay only if not the last batch (50ms instead of 200ms)
+            if (i + batchSize < locations.length) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        }
+        
+        return results;
     }
 
     // Load alumni locations
@@ -255,28 +342,32 @@
 
             const countries = new Set();
             let totalAlumni = 0;
-            let processedCount = 0;
 
-            // Process locations
-            for (const location of data.locations) {
+            // Count stats first
+            data.locations.forEach(location => {
                 countries.add(location.country);
                 totalAlumni += location.alumni.length;
+            });
 
-                const coordinates = await geocodeLocation(location.location_string);
-                
+            // Process locations in parallel batches (batch size 20, 50ms delay)
+            const locationResults = await processLocationsBatch(data.locations, 20);
+
+            // Escape HTML to prevent XSS
+            const escapeHtml = (text) => {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            };
+
+            const darkMode = isDarkMode();
+
+            // Add markers for successfully geocoded locations
+            locationResults.forEach(({ location, coordinates }) => {
                 if (coordinates) {
-                    // Escape HTML to prevent XSS
-                    const escapeHtml = (text) => {
-                        const div = document.createElement('div');
-                        div.textContent = text;
-                        return div.innerHTML;
-                    };
-
-                    // Create popup content with dark mode support
-                    const darkMode = isDarkMode();
                     const popupContent = `
                         <div class="p-2 min-w-[200px] max-w-[300px] ${darkMode ? 'dark' : ''}">
-                            <h3 class="font-bold text-lg mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}">${escapeHtml(location.city)}, ${escapeHtml(location.state || '')}</h3>
+                            <h3 class="font-bold text-lg mb-2 ${darkMode ? 'text-white' : 'text-gray-900'}">${escapeHtml(location.city || '')}, ${escapeHtml(location.state || '')}</h3>
                             <p class="text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2">${escapeHtml(location.country)}</p>
                             <p class="text-sm font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}">${location.alumni.length} ${location.alumni.length === 1 ? 'Alumnus' : 'Alumni'}</p>
                             <div class="max-h-40 overflow-y-auto space-y-1">
@@ -307,16 +398,7 @@
 
                     markers.push(marker);
                 }
-
-                processedCount++;
-                // Update loading message
-                if (loadingDiv) {
-                    loadingDiv.querySelector('p').textContent = `Processing ${processedCount} of ${data.locations.length} locations...`;
-                }
-
-                // Small delay to respect rate limits
-                await new Promise(resolve => setTimeout(resolve, 200));
-            }
+            });
 
             // Update stats
             document.getElementById('total-locations').textContent = data.locations.length;
