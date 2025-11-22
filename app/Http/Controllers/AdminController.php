@@ -774,4 +774,106 @@ class AdminController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    /**
+     * Show email form for alumni with missing details.
+     */
+    public function showMissingDetailsEmailForm(Request $request)
+    {
+        // Start with base query (excluding admins)
+        $query = User::whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin');
+        })
+            ->where('profile_status', 'pending')
+            ->where('profile_completed', true);
+
+        // Filter by missing type
+        $missingType = $request->get('missing_type', 'both');
+
+        if ($missingType === 'proof_document') {
+            $query->where(function ($q) {
+                $q->whereNull('proof_document')
+                    ->orWhere('proof_document', '');
+            });
+        } elseif ($missingType === 'enrollment_no') {
+            $query->where(function ($q) {
+                $q->whereNull('enrollment_no')
+                    ->orWhere('enrollment_no', '');
+            });
+        } elseif ($missingType === 'both') {
+            $query->where(function ($q) {
+                $q->where(function ($subQ) {
+                    $subQ->whereNull('proof_document')
+                        ->orWhere('proof_document', '');
+                })
+                    ->orWhere(function ($subQ) {
+                        $subQ->whereNull('enrollment_no')
+                            ->orWhere('enrollment_no', '');
+                    });
+            });
+        }
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            if (! empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('course', 'like', "%{$search}%");
+                });
+            }
+        }
+
+        $query->orderBy('name', 'asc');
+        $recipients = $query->get();
+        $recipientCount = $recipients->count();
+
+        return view('admin.profiles.missing-details-email-form', compact('recipients', 'recipientCount', 'missingType'));
+    }
+
+    /**
+     * Send email to alumni with missing details.
+     */
+    public function sendMissingDetailsEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'recipient_ids' => 'required|array',
+            'recipient_ids.*' => 'exists:users,id',
+            'missing_type' => 'nullable|in:both,proof_document,enrollment_no',
+        ]);
+
+        try {
+            // Get recipients
+            $recipients = User::whereIn('id', $validated['recipient_ids'])
+                ->whereDoesntHave('roles', function ($q) {
+                    $q->where('name', 'admin');
+                })
+                ->where('profile_status', 'pending')
+                ->where('profile_completed', true)
+                ->get();
+
+            // Queue all emails instead of sending synchronously
+            $queuedCount = 0;
+            foreach ($recipients as $recipient) {
+                try {
+                    // Replace @{{name}} placeholder with actual name
+                    $personalizedMessage = str_replace('@{{name}}', $recipient->name, $validated['message']);
+                    Mail::to($recipient->email)->queue(new \App\Mail\AlumniEmail($recipient, $validated['subject'], $personalizedMessage));
+                    $queuedCount++;
+                } catch (\Exception $e) {
+                    \Log::error("Failed to queue missing details email to {$recipient->email}: ".$e->getMessage());
+                }
+            }
+
+            return redirect()->route('admin.profiles.pending')
+                ->with('success', "{$queuedCount} emails have been queued for sending to alumni with missing details. Emails will be sent in the background.");
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to send emails: '.$e->getMessage()]);
+        }
+    }
 }

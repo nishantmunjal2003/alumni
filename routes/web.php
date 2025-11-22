@@ -29,9 +29,9 @@ Route::get('/', function () {
         ->limit(3)
         ->get();
 
-    $totalAlumni = User::where('status', 'active')
-        ->where('profile_status', 'approved')
-        ->count();
+    $totalAlumni = User::whereHas('roles', function ($q) {
+        $q->where('name', 'alumni');
+    })->count();
 
     $totalEvents = Event::where('status', 'published')->count();
 
@@ -140,6 +140,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/profiles/{user}', [AdminController::class, 'viewProfile'])->name('profiles.view');
     Route::post('/profiles/{user}/approve', [AdminController::class, 'approveProfile'])->name('profiles.approve');
     Route::post('/profiles/{user}/block', [AdminController::class, 'blockProfile'])->name('profiles.block');
+    Route::get('/profiles/missing-details/email', [AdminController::class, 'showMissingDetailsEmailForm'])->name('profiles.missing-details.email');
+    Route::post('/profiles/missing-details/email', [AdminController::class, 'sendMissingDetailsEmail'])->name('profiles.missing-details.email.send');
 
     // Alumni directory management
     Route::get('/alumni', [AdminController::class, 'alumniDirectory'])->name('alumni.index');
@@ -162,4 +164,30 @@ Route::middleware(['auth', 'manager'])->prefix('manager')->name('manager.')->gro
     Route::get('/alumni/{user}', [ManagerController::class, 'show'])->name('alumni.show');
     Route::post('/alumni/{user}/activate', [ManagerController::class, 'activate'])->name('alumni.activate');
     Route::post('/alumni/{user}/deactivate', [ManagerController::class, 'deactivate'])->name('alumni.deactivate');
+    Route::get('/alumni/map', [ManagerController::class, 'alumniMap'])->name('alumni.map');
+    Route::get('/alumni/map/locations', [ManagerController::class, 'getAlumniLocations'])->name('alumni.map.locations');
+    Route::get('/alumni/export/excel', [ManagerController::class, 'exportAlumni'])->name('alumni.export');
+    Route::get('/alumni/email/bulk', [ManagerController::class, 'showBulkEmailForm'])->name('alumni.email.bulk');
+    Route::post('/alumni/email/bulk', [ManagerController::class, 'sendBulkEmail'])->name('alumni.email.bulk.send');
+
+    // Event management
+    Route::get('/events', [ManagerController::class, 'eventsIndex'])->name('events.index');
+    Route::get('/events/create', [ManagerController::class, 'eventsCreate'])->name('events.create');
+    Route::post('/events', [ManagerController::class, 'eventsStore'])->name('events.store');
+    Route::get('/events/{id}/edit', [ManagerController::class, 'eventsEdit'])->name('events.edit');
+    Route::put('/events/{id}', [ManagerController::class, 'eventsUpdate'])->name('events.update');
+    Route::delete('/events/{id}', [ManagerController::class, 'eventsDestroy'])->name('events.destroy');
+    Route::get('/events/{id}/registrations', [ManagerController::class, 'eventsShowRegistrations'])->name('events.registrations');
+    Route::get('/events/{id}/email', [ManagerController::class, 'eventsShowEmailForm'])->name('events.email');
+    Route::post('/events/{id}/email', [ManagerController::class, 'eventsSendEmail'])->name('events.email.send');
+
+    // Campaign management
+    Route::get('/campaigns', [ManagerController::class, 'campaignsIndex'])->name('campaigns.index');
+    Route::get('/campaigns/create', [ManagerController::class, 'campaignsCreate'])->name('campaigns.create');
+    Route::post('/campaigns', [ManagerController::class, 'campaignsStore'])->name('campaigns.store');
+    Route::get('/campaigns/{id}/edit', [ManagerController::class, 'campaignsEdit'])->name('campaigns.edit');
+    Route::put('/campaigns/{id}', [ManagerController::class, 'campaignsUpdate'])->name('campaigns.update');
+    Route::delete('/campaigns/{id}', [ManagerController::class, 'campaignsDestroy'])->name('campaigns.destroy');
+    Route::get('/campaigns/{id}/email', [ManagerController::class, 'campaignsShowEmailForm'])->name('campaigns.email');
+    Route::post('/campaigns/{id}/email', [ManagerController::class, 'campaignsSendEmail'])->name('campaigns.email.send');
 });
