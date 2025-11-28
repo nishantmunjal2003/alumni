@@ -479,11 +479,19 @@
                         <li class="text-gray-600">Stay updated with our latest events</li>
                         <li class="text-gray-600">Join meaningful campaigns</li>
                         <li class="text-gray-600">Network with fellow alumni</li>
+                        <li class="text-gray-600">
+                            <span>Support: </span>
+                            <a href="mailto:admin@gkv.ac.in" class="text-indigo-600 hover:text-indigo-700 underline">admin@gkv.ac.in</a>
+                        </li>
                     </ul>
                 </div>
             </div>
             <div class="mt-8 pt-8 border-t border-[#e3e3e0] text-center text-gray-600">
                 <p>&copy; {{ date('Y') }} Alumni Portal. All rights reserved.</p>
+                <p class="mt-2">
+                    <span>Need help? Contact us at </span>
+                    <a href="mailto:admin@gkv.ac.in" class="text-indigo-600 hover:text-indigo-700 underline">admin@gkv.ac.in</a>
+                </p>
                 <p class="mt-2">
                     Designed by <a href="https://www.nishantmunjal.com" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-700 underline">Dr. Nishant Kumar</a>
                 </p>

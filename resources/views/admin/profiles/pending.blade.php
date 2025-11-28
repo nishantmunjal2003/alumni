@@ -3,17 +3,113 @@
 @section('title', 'Pending Profiles')
 
 @section('content')
+<style>
+    /* Force light mode - override any dark mode styles */
+    html, body {
+        color-scheme: light !important;
+    }
+    html.dark, body.dark {
+        background-color: #f9fafb !important;
+    }
+    html.dark *, body.dark * {
+        --tw-bg-opacity: 1;
+    }
+</style>
+<script>
+    // Force light mode on pending profiles page
+    (function() {
+        let isProcessing = false;
+        
+        // Remove dark class immediately
+        const removeDarkMode = function() {
+            if (isProcessing) {
+                return;
+            }
+            isProcessing = true;
+            
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+            }
+            if (document.body.classList.contains('dark')) {
+                document.body.classList.remove('dark');
+            }
+            
+            // Use requestAnimationFrame to prevent blocking
+            requestAnimationFrame(() => {
+                isProcessing = false;
+            });
+        };
+        
+        // Remove on DOMContentLoaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', removeDarkMode);
+        } else {
+            removeDarkMode();
+        }
+        
+        // Watch for any attempts to add dark class with debouncing
+        let timeoutId = null;
+        const observer = new MutationObserver(function(mutations) {
+            // Debounce the removal to prevent excessive calls
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            timeoutId = setTimeout(removeDarkMode, 50);
+        });
+        
+        observer.observe(document.documentElement, { 
+            attributes: true, 
+            attributeFilter: ['class'],
+            attributeOldValue: false
+        });
+        observer.observe(document.body, { 
+            attributes: true, 
+            attributeFilter: ['class'],
+            attributeOldValue: false
+        });
+        
+        // Remove dark mode toggle buttons if they exist
+        const removeDarkToggle = function() {
+            const darkToggles = document.querySelectorAll('[data-theme-toggle], [id*="dark"], [id*="theme"], button[aria-label*="dark"], button[aria-label*="theme"]');
+            darkToggles.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes('dark') || btn.textContent.toLowerCase().includes('theme')) {
+                    btn.style.display = 'none';
+                }
+            });
+        };
+        
+        // Remove toggle buttons immediately and on DOMContentLoaded
+        removeDarkToggle();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', removeDarkToggle);
+        }
+        
+        // Watch for dynamically added toggle buttons
+        const toggleObserver = new MutationObserver(removeDarkToggle);
+        toggleObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    })();
+</script>
 <div class="space-y-3 sm:space-y-4 px-4 sm:px-0">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold">Pending Profiles for Approval</h1>
             <p class="text-sm text-gray-600 mt-1">
-                <span class="font-semibold text-indigo-600">{{ $totalPendingCount ?? $pendingProfiles->total() }}</span> 
                 @php
-                    $count = $totalPendingCount ?? $pendingProfiles->total();
+                    // Show filtered count if filters are applied, otherwise show total
+                    $hasFilters = request('search') || request('proof_filter');
+                    $displayCount = $hasFilters ? $pendingProfiles->total() : ($totalPendingCount ?? $pendingProfiles->total());
                 @endphp
-                {{ $count == 1 ? 'profile' : 'profiles' }} pending approval
+                <span class="font-semibold text-indigo-600" id="pending-count">{{ $displayCount }}</span> 
+                {{ $displayCount == 1 ? 'profile' : 'profiles' }} 
+                @if($hasFilters)
+                    found
+                @else
+                    pending approval
+                @endif
             </p>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -119,6 +215,7 @@
         fetch(url, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'text/html',
             },
             signal: controller.signal
         })
@@ -130,7 +227,53 @@
             return response.text();
         })
         .then(html => {
-            profilesList.innerHTML = html;
+            // The controller should return only the partial view HTML for AJAX requests
+            // If we somehow get the full page, extract just the profiles list content
+            if (html.includes('<!DOCTYPE html>') || html.includes('<html') || html.includes('extends')) {
+                // Full page was returned - extract the partial content
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                
+                // Try to find the profiles list content
+                const content = tempDiv.querySelector('#profiles-list') || 
+                               tempDiv.querySelector('[id*="profiles"]') ||
+                               tempDiv.querySelector('table') ||
+                               tempDiv.querySelector('.bg-white.shadow');
+                
+                if (content) {
+                    profilesList.innerHTML = content.innerHTML;
+                } else {
+                    // Fallback: try to extract body content
+                    const bodyContent = tempDiv.querySelector('body');
+                    if (bodyContent) {
+                        profilesList.innerHTML = bodyContent.innerHTML;
+                    } else {
+                        profilesList.innerHTML = '<div class="bg-white shadow rounded-lg p-6 text-center"><p class="text-red-600">Error loading results. Please refresh the page.</p></div>';
+                    }
+                }
+            } else {
+                // It's already just the partial content
+                profilesList.innerHTML = html;
+            }
+            
+            // Update the count display from pagination info
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const paginationLinks = doc.querySelectorAll('a[href*="page="]');
+                // Try to extract total from pagination - Laravel pagination shows "Showing X to Y of Z results"
+                const paginationText = doc.body.textContent || '';
+                const showingMatch = paginationText.match(/Showing\s+\d+\s+to\s+\d+\s+of\s+(\d+)/i);
+                if (showingMatch) {
+                    const countElement = document.getElementById('pending-count');
+                    if (countElement) {
+                        countElement.textContent = showingMatch[1];
+                    }
+                }
+            } catch (e) {
+                // Ignore errors in count update
+            }
+            
             isSearching = false;
         })
         .catch(error => {

@@ -110,6 +110,22 @@
         @yield('content')
     </main>
 
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-gray-600">
+                <p>&copy; {{ date('Y') }} Alumni Portal. All rights reserved.</p>
+                <p class="mt-2">
+                    <span>Need help? Contact us at </span>
+                    <a href="mailto:admin@gkv.ac.in" class="text-indigo-600 hover:text-indigo-700 underline">admin@gkv.ac.in</a>
+                </p>
+                <p class="mt-2">
+                    Designed by <a href="https://www.nishantmunjal.com" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-700 underline">Dr. Nishant Kumar</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
     <script>
         // Mobile menu toggle
         document.getElementById('mobile-menu-button')?.addEventListener('click', function() {

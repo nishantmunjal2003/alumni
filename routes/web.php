@@ -103,6 +103,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/users/{user}/edit', [AdminController::class, 'editAlumni'])->name('users.edit');
     Route::put('/users/{user}', [AdminController::class, 'updateAlumni'])->name('users.update');
     Route::post('/users/{user}/roles', [AdminController::class, 'updateUserRoles'])->name('users.roles.update');
+    Route::post('/users/{user}/roles/{role}/toggle', [AdminController::class, 'toggleUserRole'])->name('users.roles.toggle');
     Route::post('/users/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::delete('/users/{user}', [AdminController::class, 'destroy'])->name('users.destroy');
 

@@ -155,28 +155,29 @@
                                             $isDisabled = $isProtectedAdmin && $isAdminRole;
                                             $hasRole = in_array($role->name, $userRoles[$user->id] ?? []);
                                         @endphp
-                                        <label class="inline-flex items-center {{ $isDisabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
-                                            <input 
-                                                type="checkbox" 
-                                                class="sr-only peer role-checkbox" 
-                                                data-user-id="{{ $user->id }}"
-                                                data-role-name="{{ $role->name }}"
-                                                {{ $hasRole ? 'checked' : '' }}
-                                                {{ $isDisabled ? 'disabled' : '' }}
-                                                onchange="{{ $isDisabled ? '' : "updateUserRoles({$user->id})" }}"
-                                            >
-                                            <span class="px-3 py-1 text-xs rounded-full transition-colors {{ $hasRole ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600' }} {{ $isDisabled ? 'opacity-50' : '' }} peer-checked:bg-indigo-100 peer-checked:text-indigo-800">
-                                                {{ $role->name }}
+                                        <div class="flex items-center gap-2">
+                                            <label class="relative inline-flex items-center {{ $isDisabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
+                                                <input 
+                                                    type="checkbox" 
+                                                    class="sr-only peer role-toggle" 
+                                                    data-user-id="{{ $user->id }}"
+                                                    data-role-name="{{ $role->name }}"
+                                                    id="role-toggle-{{ $user->id }}-{{ $role->name }}"
+                                                    {{ $hasRole ? 'checked' : '' }}
+                                                    {{ $isDisabled ? 'disabled' : '' }}
+                                                    onchange="{{ $isDisabled ? '' : "toggleUserRole({$user->id}, '{$role->name}', this)" }}"
+                                                >
+                                                <div class="w-11 h-6 {{ $isDisabled ? 'bg-gray-300 opacity-50' : ($hasRole ? 'bg-indigo-600' : 'bg-gray-200') }} peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all {{ $hasRole ? 'peer-checked:bg-indigo-600' : '' }}"></div>
+                                            </label>
+                                            <span class="text-xs font-medium {{ $hasRole ? 'text-indigo-800' : 'text-gray-600' }} {{ $isDisabled ? 'opacity-50' : '' }}">
+                                                {{ ucfirst($role->name) }}
                                                 @if($isDisabled)
-                                                    <span class="text-xs text-gray-500 ml-1">(Protected)</span>
+                                                    <span class="text-gray-500">(Protected)</span>
                                                 @endif
                                             </span>
-                                        </label>
+                                        </div>
                                     @endforeach
                                 </div>
-                                <form method="POST" action="{{ route('admin.users.roles.update', $user->id) }}" id="roles-form-{{ $user->id }}" style="display: none;">
-                                    @csrf
-                                </form>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div class="flex gap-2 items-center">
@@ -289,35 +290,36 @@
                 <!-- Roles Section -->
                 <div class="py-2 border-t border-gray-200">
                     <div class="text-sm font-medium text-gray-700 mb-3">Roles</div>
-                    <div class="flex flex-wrap gap-2" id="roles-container-mobile-{{ $user->id }}">
+                    <div class="space-y-2" id="roles-container-mobile-{{ $user->id }}">
                         @foreach($roles as $role)
                             @php
                                 $isAdminRole = $role->name === 'admin';
                                 $isDisabled = $isProtectedAdmin && $isAdminRole;
                                 $hasRole = in_array($role->name, $userRoles[$user->id] ?? []);
                             @endphp
-                            <label class="inline-flex items-center {{ $isDisabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
-                                <input 
-                                    type="checkbox" 
-                                    class="sr-only peer role-checkbox" 
-                                    data-user-id="{{ $user->id }}"
-                                    data-role-name="{{ $role->name }}"
-                                    {{ $hasRole ? 'checked' : '' }}
-                                    {{ $isDisabled ? 'disabled' : '' }}
-                                    onchange="{{ $isDisabled ? '' : "updateUserRoles({$user->id})" }}"
-                                >
-                                <span class="px-3 py-1 text-xs rounded-full transition-colors {{ $hasRole ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600' }} {{ $isDisabled ? 'opacity-50' : '' }} peer-checked:bg-indigo-100 peer-checked:text-indigo-800">
-                                    {{ $role->name }}
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-700 {{ $isDisabled ? 'opacity-50' : '' }}">
+                                    {{ ucfirst($role->name) }}
                                     @if($isDisabled)
-                                        <span class="text-xs text-gray-500 ml-1">(Protected)</span>
+                                        <span class="text-gray-500 text-xs">(Protected)</span>
                                     @endif
                                 </span>
-                            </label>
+                                <label class="relative inline-flex items-center {{ $isDisabled ? 'cursor-not-allowed' : 'cursor-pointer' }}">
+                                    <input 
+                                        type="checkbox" 
+                                        class="sr-only peer role-toggle" 
+                                        data-user-id="{{ $user->id }}"
+                                        data-role-name="{{ $role->name }}"
+                                        id="role-toggle-mobile-{{ $user->id }}-{{ $role->name }}"
+                                        {{ $hasRole ? 'checked' : '' }}
+                                        {{ $isDisabled ? 'disabled' : '' }}
+                                        onchange="{{ $isDisabled ? '' : "toggleUserRole({$user->id}, '{$role->name}', this)" }}"
+                                    >
+                                    <div class="w-11 h-6 {{ $isDisabled ? 'bg-gray-300 opacity-50' : ($hasRole ? 'bg-indigo-600' : 'bg-gray-200') }} peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all {{ $hasRole ? 'peer-checked:bg-indigo-600' : '' }}"></div>
+                                </label>
+                            </div>
                         @endforeach
                     </div>
-                    <form method="POST" action="{{ route('admin.users.roles.update', $user->id) }}" id="roles-form-mobile-{{ $user->id }}" style="display: none;">
-                        @csrf
-                    </form>
                 </div>
 
                 <!-- Actions -->
@@ -420,61 +422,82 @@
         });
     }
 
-    function updateUserRoles(userId) {
-        // Get all checked roles for this user
-        const checkboxes = document.querySelectorAll(`input.role-checkbox[data-user-id="${userId}"]`);
-        const checkedRoles = [];
+    function toggleUserRole(userId, roleName, checkbox) {
+        const isChecked = checkbox.checked;
+        const toggleElement = checkbox.nextElementSibling;
+        const originalBg = isChecked ? 'bg-indigo-600' : 'bg-gray-200';
         
-        checkboxes.forEach(checkbox => {
-            if (checkbox.checked) {
-                checkedRoles.push(checkbox.getAttribute('data-role-name'));
-            }
-        });
+        // Update visual state optimistically
+        if (isChecked) {
+            toggleElement.classList.remove('bg-gray-200');
+            toggleElement.classList.add('bg-indigo-600');
+        } else {
+            toggleElement.classList.remove('bg-indigo-600');
+            toggleElement.classList.add('bg-gray-200');
+        }
 
-        // Update visual state immediately
-        checkboxes.forEach(checkbox => {
-            const span = checkbox.nextElementSibling;
-            if (checkbox.checked) {
-                span.classList.remove('bg-gray-100', 'text-gray-600');
-                span.classList.add('bg-indigo-100', 'text-indigo-800');
+        // Update label text color
+        const labelText = checkbox.closest('div').querySelector('span.text-xs, span.text-sm');
+        if (labelText) {
+            if (isChecked) {
+                labelText.classList.remove('text-gray-600');
+                labelText.classList.add('text-indigo-800');
             } else {
-                span.classList.remove('bg-indigo-100', 'text-indigo-800');
-                span.classList.add('bg-gray-100', 'text-gray-600');
+                labelText.classList.remove('text-indigo-800');
+                labelText.classList.add('text-gray-600');
             }
-        });
+        }
 
-        // Prepare form data
-        const form = document.getElementById(`roles-form-${userId}`) || document.getElementById(`roles-form-mobile-${userId}`);
-        const formData = new FormData(form);
-        
-        // Add checked roles
-        checkedRoles.forEach(role => {
-            formData.append('roles[]', role);
-        });
-
-        // Submit via fetch
-        fetch(form.action, {
+        // Make API call
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        fetch(`/admin/users/${userId}/roles/${roleName}/toggle`, {
             method: 'POST',
-            body: formData,
             headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken || '',
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
-            }
+            },
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                return response.json().then(err => {
+                    throw new Error(err.message || 'Failed to update role');
+                });
             }
             return response.json();
         })
         .then(data => {
-            // Success - roles updated
-            console.log('Roles updated successfully');
+            console.log('Role toggled successfully:', data);
+            // Update checkbox state based on server response
+            checkbox.checked = data.hasRole;
+            if (data.hasRole) {
+                toggleElement.classList.remove('bg-gray-200');
+                toggleElement.classList.add('bg-indigo-600');
+                if (labelText) {
+                    labelText.classList.remove('text-gray-600');
+                    labelText.classList.add('text-indigo-800');
+                }
+            } else {
+                toggleElement.classList.remove('bg-indigo-600');
+                toggleElement.classList.add('bg-gray-200');
+                if (labelText) {
+                    labelText.classList.remove('text-indigo-800');
+                    labelText.classList.add('text-gray-600');
+                }
+            }
         })
         .catch(error => {
-            console.error('Error updating roles:', error);
-            // Revert checkboxes on error
-            location.reload();
+            console.error('Error toggling role:', error);
+            // Revert checkbox state
+            checkbox.checked = !isChecked;
+            toggleElement.classList.remove('bg-indigo-600', 'bg-gray-200');
+            toggleElement.classList.add(originalBg);
+            if (labelText) {
+                labelText.classList.remove('text-indigo-800', 'text-gray-600');
+                labelText.classList.add(isChecked ? 'text-gray-600' : 'text-indigo-800');
+            }
+            alert('Error: ' + error.message);
         });
     }
 </script>

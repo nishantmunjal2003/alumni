@@ -6,6 +6,7 @@ use App\Models\Campaign;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
@@ -22,9 +23,17 @@ class AdminController extends Controller
         $userStats = User::selectRaw('
             COUNT(*) as total_users,
             SUM(CASE WHEN status = "active" THEN 1 ELSE 0 END) as active_users,
-            SUM(CASE WHEN status = "inactive" THEN 1 ELSE 0 END) as inactive_users,
-            SUM(CASE WHEN profile_status = "pending" AND profile_completed = 1 THEN 1 ELSE 0 END) as pending_profiles
+            SUM(CASE WHEN status = "inactive" THEN 1 ELSE 0 END) as inactive_users
         ')->first();
+
+        // Get pending profiles count matching the pendingProfiles method logic
+        // Show all pending profiles - don't restrict by profile_completed
+        // Exclude admin users
+        $pendingProfilesCount = User::where('profile_status', 'pending')
+            ->whereDoesntHave('roles', function ($q) {
+                $q->where('name', 'admin');
+            })
+            ->count();
 
         $stats = [
             'total_users' => (int) $userStats->total_users,
@@ -32,7 +41,7 @@ class AdminController extends Controller
             'inactive_users' => (int) $userStats->inactive_users,
             'total_events' => Event::count(),
             'total_campaigns' => Campaign::count(),
-            'pending_profiles' => (int) $userStats->pending_profiles,
+            'pending_profiles' => $pendingProfilesCount,
             'recent_registrations' => User::latest()->limit(5)->get(),
         ];
 
@@ -80,15 +89,77 @@ class AdminController extends Controller
         return view('admin.users.index', compact('users', 'roles', 'userRoles'));
     }
 
+    public function toggleUserRole(Request $request, User $user, string $roleName)
+    {
+        $isProtectedAdmin = $user->email === 'nishant@gkv.ac.in';
+        $isAdminRole = $roleName === 'admin';
+
+        // Prevent removing admin role from the protected admin account
+        if ($isProtectedAdmin && $isAdminRole && $user->hasRole('admin')) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Admin role is protected for this account.',
+                ], 403);
+            }
+
+            return back()->with('error', 'Admin role is protected for this account.');
+        }
+
+        // Verify role exists
+        $role = Role::where('name', $roleName)->first();
+        if (! $role) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Role not found.',
+                ], 404);
+            }
+
+            return back()->with('error', 'Role not found.');
+        }
+
+        // Toggle role
+        if ($user->hasRole($roleName)) {
+            $user->removeRole($roleName);
+            $action = 'removed';
+        } else {
+            $user->assignRole($roleName);
+            $action = 'assigned';
+        }
+
+        // Clear permission cache to ensure changes are reflected immediately
+        Artisan::call('permission:cache-reset');
+
+        // Refresh the user's roles relationship
+        $user->load('roles');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Role '{$roleName}' {$action} successfully!",
+                'hasRole' => $user->hasRole($roleName),
+                'roles' => $user->roles->pluck('name')->toArray(),
+            ]);
+        }
+
+        return back()->with('success', "Role '{$roleName}' {$action} successfully!");
+    }
+
     public function updateUserRoles(Request $request, User $user)
     {
         // Prevent removing admin role from the protected admin account
         if ($user->email === 'nishant@gkv.ac.in') {
             $validated = $request->validate([
-                'roles' => 'array',
+                'roles' => 'nullable|array',
+                'roles.*' => 'string',
             ]);
 
             $roles = $validated['roles'] ?? [];
+
+            // Filter out any empty strings and ensure we have valid role names
+            $roles = array_filter($roles, fn ($role) => ! empty($role));
+            $roles = array_values($roles); // Re-index array
 
             // Ensure admin role is always present
             $adminRole = Role::where('name', 'admin')->first();
@@ -98,6 +169,12 @@ class AdminController extends Controller
 
             $user->syncRoles($roles);
 
+            // Clear permission cache to ensure changes are reflected immediately
+            Artisan::call('permission:cache-reset');
+
+            // Refresh the user's roles relationship to ensure it's up to date
+            $user->load('roles');
+
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'User roles updated successfully! Note: Admin role is protected for this account.']);
             }
@@ -106,14 +183,31 @@ class AdminController extends Controller
         }
 
         $validated = $request->validate([
-            'roles' => 'array',
+            'roles' => 'nullable|array',
+            'roles.*' => 'string',
         ]);
 
         $roles = $validated['roles'] ?? [];
+
+        // Filter out any empty strings and ensure we have valid role names
+        $roles = array_filter($roles, fn ($role) => ! empty($role));
+        $roles = array_values($roles); // Re-index array
+
+        // Sync roles - this will remove all roles not in the array
         $user->syncRoles($roles);
 
+        // Clear permission cache to ensure changes are reflected immediately
+        Artisan::call('permission:cache-reset');
+
+        // Refresh the user's roles relationship to ensure it's up to date
+        $user->load('roles');
+
         if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'User roles updated successfully!']);
+            return response()->json([
+                'success' => true,
+                'message' => 'User roles updated successfully!',
+                'roles' => $user->roles->pluck('name')->toArray(),
+            ]);
         }
 
         return back()->with('success', 'User roles updated successfully!');
@@ -205,16 +299,59 @@ class AdminController extends Controller
     /**
      * Show pending profiles for approval.
      */
-    public function pendingProfiles()
+    public function pendingProfiles(Request $request)
     {
-        $pendingProfiles = User::where('profile_status', 'pending')
-            ->where('profile_completed', true)
-            ->latest()
-            ->paginate(20);
+        // Show all pending profiles - don't restrict by profile_completed
+        // Some profiles might be pending even if profile_completed is false
+        $query = User::where('profile_status', 'pending')
+            ->whereDoesntHave('roles', function ($q) {
+                $q->where('name', 'admin');
+            });
+
+        // Filter by proof document status
+        if ($request->filled('proof_filter')) {
+            $proofFilter = $request->proof_filter;
+            if ($proofFilter === 'uploaded') {
+                $query->where(function ($q) {
+                    $q->whereNotNull('proof_document')
+                        ->where('proof_document', '!=', '')
+                        ->whereRaw("TRIM(proof_document) != ''");
+                });
+            } elseif ($proofFilter === 'missing') {
+                $query->where(function ($q) {
+                    $q->whereNull('proof_document')
+                        ->orWhere('proof_document', '')
+                        ->orWhereRaw("TRIM(COALESCE(proof_document, '')) = ''");
+                });
+            }
+        }
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+            if (! empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('enrollment_no', 'like', "%{$search}%")
+                        ->orWhere('course', 'like', "%{$search}%")
+                        ->orWhere('company', 'like', "%{$search}%")
+                        ->orWhere('passing_year', 'like', "%{$search}%");
+                });
+            }
+        }
+
+        $pendingProfiles = $query->latest()->paginate(20)->withQueryString();
 
         $totalPendingCount = User::where('profile_status', 'pending')
-            ->where('profile_completed', true)
+            ->whereDoesntHave('roles', function ($q) {
+                $q->where('name', 'admin');
+            })
             ->count();
+
+        if ($request->ajax()) {
+            return view('admin.profiles.partials.pending-list', compact('pendingProfiles'))->render();
+        }
 
         return view('admin.profiles.pending', compact('pendingProfiles', 'totalPendingCount'));
     }

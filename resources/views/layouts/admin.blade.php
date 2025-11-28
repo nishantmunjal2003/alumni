@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel') - Alumni Portal</title>
     <link rel="icon" type="image/png" href="https://gkv.ac.in/logo.png">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
