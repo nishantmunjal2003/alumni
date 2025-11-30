@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\VerifyOtpRequest;
+use App\Mail\OtpVerificationMail;
 use App\Mail\WelcomeMail;
+use App\Models\EmailOtp;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -57,31 +61,130 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'phone' => 'nullable|string|max:20',
-        ]);
+        $validated = $request->validated();
 
-        $user = User::create([
+        // Store registration data in session
+        $request->session()->put('registration_data', [
             'name' => ucwords(strtolower(trim($validated['name'])), " \t\r\n\f\v"),
             'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'password' => $validated['password'],
             'phone' => $validated['phone'] ?? null,
+        ]);
+
+        // Initialize OTP attempts counter
+        $request->session()->put('otp_attempts', 0);
+
+        // Generate and send OTP
+        $emailOtp = EmailOtp::createForEmail($validated['email']);
+        Mail::to($validated['email'])->send(new OtpVerificationMail($emailOtp->otp));
+
+        return redirect()->route('verify.otp')->with('email', $validated['email']);
+    }
+
+    public function showVerifyOtpForm(Request $request)
+    {
+        $email = $request->session()->get('email') ?? $request->get('email');
+
+        if (! $email || ! $request->session()->has('registration_data')) {
+            return redirect()->route('register')->withErrors(['error' => 'Please complete the registration form first.']);
+        }
+
+        $attemptsRemaining = 3 - ($request->session()->get('otp_attempts', 0));
+
+        return view('auth.verify-otp', compact('email', 'attemptsRemaining'));
+    }
+
+    public function verifyOtp(VerifyOtpRequest $request)
+    {
+        $registrationData = $request->session()->get('registration_data');
+
+        if (! $registrationData) {
+            return redirect()->route('register')->withErrors(['error' => 'Registration session expired. Please register again.']);
+        }
+
+        $email = $registrationData['email'];
+        $otp = $request->validated()['otp'];
+
+        // Get current attempt count
+        $attempts = $request->session()->get('otp_attempts', 0);
+
+        // Check if maximum attempts reached
+        if ($attempts >= 3) {
+            $request->session()->forget('registration_data');
+            $request->session()->forget('email');
+            $request->session()->forget('otp_attempts');
+
+            return redirect()->route('register')->withErrors(['error' => 'Maximum verification attempts exceeded. Please register again.']);
+        }
+
+        if (! EmailOtp::verify($email, $otp)) {
+            // Increment attempt counter
+            $attempts++;
+            $request->session()->put('otp_attempts', $attempts);
+            $attemptsRemaining = 3 - $attempts;
+
+            if ($attemptsRemaining > 0) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['otp' => "❌ The verification code you entered is incorrect. You have {$attemptsRemaining} more attempt(s) remaining. Please check your email and try again."]);
+            } else {
+                // Last attempt failed
+                $request->session()->forget('registration_data');
+                $request->session()->forget('email');
+                $request->session()->forget('otp_attempts');
+
+                return redirect()->route('register')->withErrors(['error' => 'Maximum verification attempts exceeded. Please register again.']);
+            }
+        }
+
+        // OTP verified successfully - clear attempts counter
+        $request->session()->forget('otp_attempts');
+
+        // Create the user
+        $user = User::create([
+            'name' => $registrationData['name'],
+            'email' => $registrationData['email'],
+            'password' => Hash::make($registrationData['password']),
+            'phone' => $registrationData['phone'] ?? null,
         ]);
 
         // Assign 'alumni' role by default
         Role::firstOrCreate(['name' => 'alumni', 'guard_name' => 'web']);
         $user->assignRole('alumni');
 
+        // Send welcome email
         Mail::to($user->email)->send(new WelcomeMail($user));
 
+        // Clear registration data from session
+        $request->session()->forget('registration_data');
+        $request->session()->forget('email');
+
+        // Login the user
         Auth::login($user);
 
         return redirect()->route('profile.complete');
+    }
+
+    public function resendOtp(Request $request)
+    {
+        $registrationData = $request->session()->get('registration_data');
+
+        if (! $registrationData) {
+            return redirect()->route('register')->withErrors(['error' => 'Registration session expired. Please register again.']);
+        }
+
+        $email = $registrationData['email'];
+
+        // Reset attempt counter when resending OTP
+        $request->session()->forget('otp_attempts');
+
+        // Generate and send new OTP
+        $emailOtp = EmailOtp::createForEmail($email);
+        Mail::to($email)->send(new OtpVerificationMail($emailOtp->otp));
+
+        return back()->with('success', 'A new verification code has been sent to your email.');
     }
 
     public function logout(Request $request)

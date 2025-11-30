@@ -43,6 +43,9 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
+Route::get('/verify-otp', [AuthController::class, 'showVerifyOtpForm'])->name('verify.otp');
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('otp.resend');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Google OAuth routes
