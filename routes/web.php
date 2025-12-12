@@ -5,6 +5,7 @@ use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\AlumniMapController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\DataEntryController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventRegistrationController;
 use App\Http\Controllers\ManagerController;
@@ -194,4 +195,17 @@ Route::middleware(['auth', 'manager'])->prefix('manager')->name('manager.')->gro
     Route::delete('/campaigns/{id}', [ManagerController::class, 'campaignsDestroy'])->name('campaigns.destroy');
     Route::get('/campaigns/{id}/email', [ManagerController::class, 'campaignsShowEmailForm'])->name('campaigns.email');
     Route::post('/campaigns/{id}/email', [ManagerController::class, 'campaignsSendEmail'])->name('campaigns.email.send');
+});
+
+// DataEntry routes
+Route::middleware(['auth', 'dataentry'])->prefix('dataentry')->name('dataentry.')->group(function () {
+    Route::get('/', [DataEntryController::class, 'dashboard'])->name('dashboard');
+    Route::get('/profiles', [DataEntryController::class, 'index'])->name('profiles.index');
+    Route::get('/profiles/{user}', [DataEntryController::class, 'show'])->name('profiles.show');
+    Route::get('/profiles/{user}/edit', [DataEntryController::class, 'edit'])->name('profiles.edit');
+    Route::put('/profiles/{user}', [DataEntryController::class, 'update'])->name('profiles.update');
+    Route::post('/profiles/{user}/approve', [DataEntryController::class, 'approve'])->name('profiles.approve');
+    Route::post('/profiles/{user}/block', [DataEntryController::class, 'block'])->name('profiles.block');
+    Route::get('/profiles/{user}/email', [DataEntryController::class, 'showEmailForm'])->name('profiles.email');
+    Route::post('/profiles/{user}/email', [DataEntryController::class, 'sendEmail'])->name('profiles.email.send');
 });

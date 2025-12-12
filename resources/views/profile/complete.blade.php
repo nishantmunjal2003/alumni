@@ -367,32 +367,32 @@
                         </div>
 
                         <div class="md:col-span-2">
-                            <label for="employment_address" class="block text-sm font-medium text-gray-700">Address <span class="text-red-500">*</span></label>
-                            <textarea name="employment_address" id="employment_address" rows="3" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('employment_address', $user->employment_address) }}</textarea>
+                            <label for="employment_address" class="block text-sm font-medium text-gray-700">Address</label>
+                            <textarea name="employment_address" id="employment_address" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('employment_address', $user->employment_address) }}</textarea>
                             @error('employment_address')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="employment_city" class="block text-sm font-medium text-gray-700">City <span class="text-red-500">*</span></label>
-                            <input type="text" name="employment_city" id="employment_city" value="{{ old('employment_city', $user->employment_city) }}" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label for="employment_city" class="block text-sm font-medium text-gray-700">City</label>
+                            <input type="text" name="employment_city" id="employment_city" value="{{ old('employment_city', $user->employment_city) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             @error('employment_city')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="employment_state" class="block text-sm font-medium text-gray-700">State <span class="text-red-500">*</span></label>
-                            <input type="text" name="employment_state" id="employment_state" value="{{ old('employment_state', $user->employment_state) }}" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label for="employment_state" class="block text-sm font-medium text-gray-700">State</label>
+                            <input type="text" name="employment_state" id="employment_state" value="{{ old('employment_state', $user->employment_state) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             @error('employment_state')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div>
-                            <label for="employment_pincode" class="block text-sm font-medium text-gray-700">Pincode <span class="text-red-500">*</span></label>
-                            <input type="text" name="employment_pincode" id="employment_pincode" value="{{ old('employment_pincode', $user->employment_pincode) }}" maxlength="6" pattern="[0-9]{6}" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <label for="employment_pincode" class="block text-sm font-medium text-gray-700">Pincode</label>
+                            <input type="text" name="employment_pincode" id="employment_pincode" value="{{ old('employment_pincode', $user->employment_pincode) }}" maxlength="6" pattern="[0-9]{6}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             @error('employment_pincode')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror

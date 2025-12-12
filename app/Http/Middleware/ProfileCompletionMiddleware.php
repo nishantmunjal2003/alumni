@@ -31,18 +31,18 @@ class ProfileCompletionMiddleware
             return $next($request);
         }
 
-        // Check if user is admin or manager (single check using loaded roles)
-        $isAdminOrManager = $user->hasRole('admin') || $user->hasRole('manager');
+        // Check if user is admin, manager, or DataEntry (single check using loaded roles)
+        $isAdminOrManagerOrDataEntry = $user->hasRole('admin') || $user->hasRole('manager') || $user->hasRole('DataEntry');
 
         // Allow access to profile edit if user can access dashboard
         if ($request->routeIs('profile.edit') || $request->routeIs('profile.update')) {
-            if ($isAdminOrManager || ($user->isProfileComplete() && ! $user->isProfileBlocked())) {
+            if ($isAdminOrManagerOrDataEntry || ($user->isProfileComplete() && ! $user->isProfileBlocked())) {
                 return $next($request);
             }
         }
 
-        // Admins and managers bypass profile completion checks
-        if ($isAdminOrManager) {
+        // Admins, managers, and DataEntry bypass profile completion checks
+        if ($isAdminOrManagerOrDataEntry) {
             return $next($request);
         }
 

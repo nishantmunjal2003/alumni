@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'manager' => \App\Http\Middleware\ManagerMiddleware::class,
+            'dataentry' => \App\Http\Middleware\DataEntryMiddleware::class,
             'profile.complete' => \App\Http\Middleware\ProfileCompletionMiddleware::class,
         ]);
     })
