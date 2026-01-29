@@ -22,9 +22,10 @@ class StoreProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'name' => 'required|string|max:255',
             // Alumni Details
             'enrollment_no' => 'nullable|string|max:50',
-            'passing_year' => 'required|string|max:10',
+            'passing_year' => 'required|integer|min:1950|max:' . date('Y'),
             'course' => 'required|string|max:255',
             'proof_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
             'residence_address' => 'required|string|max:500',
@@ -36,15 +37,16 @@ class StoreProfileRequest extends FormRequest
             'wedding_anniversary_date' => 'nullable|date|before_or_equal:today',
             'profile_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
 
-            // Employment Details
-            'company' => 'required|string|max:255',
-            'designation' => 'required|string|max:255',
-            'employment_type' => 'required|in:Govt,Non-Govt',
+            // Employment Details - All Optional for Initial Onboarding
+            'company' => 'nullable|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'employment_type' => 'nullable|in:Govt,Non-Govt,Business,Other',
             'employment_address' => 'nullable|string|max:500',
             'employment_city' => 'nullable|string|max:255',
             'employment_state' => 'nullable|string|max:255',
             'employment_pincode' => 'nullable|string|max:10|regex:/^[0-9]{6}$/',
-            'phone' => 'required|string|max:20',
+            'phone' => 'nullable|string|max:20',
+            'is_phone_public' => 'boolean',
             'alternate_email' => 'nullable|email|max:255',
             'linkedin_url' => 'nullable|url|max:255',
         ];

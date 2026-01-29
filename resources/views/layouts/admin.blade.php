@@ -35,6 +35,7 @@
                             Messages
                             <span id="admin-unread-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
                         </a>
+                        <a href="{{ route('admin.settings.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.settings.*') ? 'font-semibold' : '' }}">Settings</a>
                         
                         <!-- User Menu -->
                         <div class="flex items-center gap-3 pl-4 border-l border-purple-500">

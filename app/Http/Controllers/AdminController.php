@@ -375,7 +375,14 @@ class AdminController extends Controller
             'status' => 'active',
         ]);
 
-        return back()->with('success', 'Profile approved successfully!');
+        // Send approval notification email
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\ProfileApprovedNotification($user));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to send profile approval email to {$user->email}: " . $e->getMessage());
+        }
+
+        return back()->with('success', 'Profile approved successfully! Notification email sent.');
     }
 
     /**
@@ -1012,5 +1019,35 @@ class AdminController extends Controller
                 ->withInput()
                 ->withErrors(['error' => 'Failed to send emails: '.$e->getMessage()]);
         }
+    }
+    
+    /**
+     * Show settings page.
+     */
+    public function settings()
+    {
+        $adminEmail = \App\Models\Setting::firstOrCreate(
+            ['key' => 'admin_email'],
+            ['value' => 'nishant@gkv.ac.in']
+        )->value;
+
+        return view('admin.settings', compact('adminEmail'));
+    }
+
+    /**
+     * Update settings.
+     */
+    public function updateSettings(Request $request)
+    {
+        $validated = $request->validate([
+            'admin_email' => 'required|email',
+        ]);
+
+        \App\Models\Setting::updateOrCreate(
+            ['key' => 'admin_email'],
+            ['value' => $validated['admin_email']]
+        );
+
+        return back()->with('success', 'Settings updated successfully!');
     }
 }

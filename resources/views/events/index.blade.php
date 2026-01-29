@@ -100,7 +100,7 @@
                         </p>
                         <p class="text-gray-500 mb-2"><strong>Venue:</strong> {{ $event->venue }}</p>
                         <div class="text-gray-500 mb-4 line-clamp-3">
-                            {!! Str::limit(strip_tags($event->description), 150) !!}
+                            {!! Str::limit(strip_tags(preg_replace('/(<style\b[^>]*>.*?<\/style>|<script\b[^>]*>.*?<\/script>)/is', '', $event->description)), 150) !!}
                         </div>
                         <div class="flex items-center justify-between gap-3">
                             <a href="{{ route('events.show', $event->id) }}" class="text-indigo-600 hover:text-indigo-800">View Details →</a>

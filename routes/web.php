@@ -69,18 +69,35 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['profile.complete'])->group(function () {
         Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+        
+        // Employment & Image
+        Route::get('/profile/employment', [ProfileController::class, 'editEmployment'])->name('profile.employment');
+        Route::put('/profile/employment', [ProfileController::class, 'updateEmployment'])->name('profile.employment.update');
+        Route::post('/profile/image', [ProfileController::class, 'updateImage'])->name('profile.image.update');
     });
 
-    // Protected routes (require profile completion and approval)
+    // Protected routes (require profile completion)
     Route::middleware(['profile.complete'])->group(function () {
         // Alumni routes
         Route::get('/dashboard', [AlumniController::class, 'dashboard'])->name('dashboard');
-        Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
-        Route::get('/alumni/map', [AlumniMapController::class, 'publicMap'])->name('alumni.map');
-        Route::get('/alumni/map/locations', [AlumniMapController::class, 'getPublicAlumniLocations'])->name('alumni.map.locations');
-        Route::get('/alumni/{id}', [AlumniController::class, 'show'])->name('alumni.show');
-        Route::get('/alumni/{id}/edit', [AlumniController::class, 'edit'])->name('alumni.edit');
-        Route::put('/alumni/{id}', [AlumniController::class, 'update'])->name('alumni.update');
+
+        // Routes requiring approval
+        Route::middleware(['profile.approved'])->group(function () {
+            Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
+            Route::get('/alumni/map', [AlumniMapController::class, 'publicMap'])->name('alumni.map');
+            Route::get('/alumni/map/locations', [AlumniMapController::class, 'getPublicAlumniLocations'])->name('alumni.map.locations');
+            Route::get('/alumni/{id}', [AlumniController::class, 'show'])->name('alumni.show');
+            Route::get('/alumni/{id}/edit', [AlumniController::class, 'edit'])->name('alumni.edit');
+            Route::put('/alumni/{id}', [AlumniController::class, 'update'])->name('alumni.update');
+
+            // Message routes
+            Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+            Route::get('/messages/search', [MessageController::class, 'search'])->name('messages.search');
+            Route::post('/messages/batch', [MessageController::class, 'batchStore'])->name('messages.batch.store');
+            Route::get('/messages/unread/count', [MessageController::class, 'unreadCount'])->name('messages.unread.count');
+            Route::get('/messages/{user}', [MessageController::class, 'show'])->name('messages.show');
+            Route::post('/messages/{user}', [MessageController::class, 'store'])->name('messages.store');
+        });
 
         // Event registration routes
         Route::get('/events/{event}/register', [EventRegistrationController::class, 'create'])->name('events.register');
@@ -89,18 +106,16 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/events/{event}/registrations/{registration}', [EventRegistrationController::class, 'update'])->name('events.registrations.update');
         Route::delete('/events/{event}/registrations/{registration}', [EventRegistrationController::class, 'destroy'])->name('events.registrations.destroy');
         Route::get('/events/{event}/fellows', [EventRegistrationController::class, 'fellows'])->name('events.fellows');
-
-        // Message routes
-        Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
-        Route::get('/messages/{user}', [MessageController::class, 'show'])->name('messages.show');
-        Route::post('/messages/{user}', [MessageController::class, 'store'])->name('messages.store');
-        Route::get('/messages/unread/count', [MessageController::class, 'unreadCount'])->name('messages.unread.count');
     });
 });
 
 // Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    // Settings
+    Route::get('/settings', [AdminController::class, 'settings'])->name('settings.index');
+    Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
 
     // User management
     Route::get('/users', [AdminController::class, 'users'])->name('users.index');

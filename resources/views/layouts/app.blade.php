@@ -23,11 +23,11 @@
                 <div class="hidden md:flex items-center space-x-4">
                     @auth
                         <a href="{{ route('dashboard') }}" class="text-sm text-gray-700 hover:text-indigo-600 transition-colors">Dashboard</a>
-                        <a href="{{ route('alumni.index') }}" class="text-sm text-gray-700 hover:text-indigo-600 transition-colors">Alumni</a>
-                        <a href="{{ route('alumni.map') }}" class="text-sm text-gray-700 hover:text-indigo-600 transition-colors">Alumni Map</a>
+                        <a href="{{ route('alumni.index') }}" class="restricted-link text-sm text-gray-700 hover:text-indigo-600 transition-colors">Alumni Directory</a>
+                        <a href="{{ route('alumni.map') }}" class="restricted-link text-sm text-gray-700 hover:text-indigo-600 transition-colors">Alumni Map</a>
                         <a href="{{ route('events.index') }}" class="text-sm text-gray-700 hover:text-indigo-600 transition-colors">Events</a>
                         <a href="{{ route('campaigns.index') }}" class="text-sm text-gray-700 hover:text-indigo-600 transition-colors">Campaigns</a>
-                        <a href="{{ route('messages.index') }}" class="text-sm text-gray-700 hover:text-indigo-600 relative transition-colors">
+                        <a href="{{ route('messages.index') }}" class="restricted-link text-sm text-gray-700 hover:text-indigo-600 relative transition-colors">
                             Messages
                             <span id="unread-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
                         </a>
@@ -37,10 +37,54 @@
                         @if(auth()->user()->hasRole('manager'))
                             <a href="{{ route('manager.dashboard') }}" class="text-sm text-gray-700 hover:text-indigo-600 transition-colors">Manager</a>
                         @endif
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
-                            @csrf
-                            <button type="submit" class="text-sm text-gray-700 hover:text-indigo-600 transition-colors">Logout</button>
-                        </form>
+                        <!-- User Dropdown -->
+                        <div class="relative ml-3">
+                            <button type="button" id="user-menu-button" class="flex items-center gap-2 text-sm text-gray-700 hover:text-indigo-600 focus:outline-none transition-colors" aria-expanded="false" aria-haspopup="true">
+                                <span class="font-medium">{{ auth()->user()->name }}</span>
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                                @if(auth()->user()->profile_image)
+                                    <img class="h-8 w-8 rounded-full object-cover border border-gray-200" src="{{ asset('storage/' . auth()->user()->profile_image) }}" alt="{{ auth()->user()->name }}">
+                                @else
+                                    <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold border border-indigo-200">
+                                        {{ substr(auth()->user()->name, 0, 1) }}
+                                    </div>
+                                @endif
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-50 transform origin-top-right transition-all duration-200" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button">
+                                <div class="py-1">
+                                    <div class="px-4 py-2 text-xs text-gray-500">
+                                        Manage Account
+                                    </div>
+                                    <a href="{{ route('profile.edit') }}" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600" role="menuitem">
+                                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        Edit Profile
+                                    </a>
+                                    <a href="{{ route('profile.employment') }}" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-indigo-600" role="menuitem">
+                                        <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                        Update Employment
+                                    </a>
+                                </div>
+                                <div class="py-1">
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600" role="menuitem">
+                                            <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                            </svg>
+                                            Logout
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     @else
                         <a href="{{ route('login') }}" class="text-sm text-gray-700 hover:text-indigo-600 transition-colors">Login</a>
                         <a href="{{ route('register') }}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors text-sm">Register</a>
@@ -65,11 +109,11 @@
                 <div class="flex flex-col space-y-1 mt-2">
                     @auth
                         <a href="{{ route('dashboard') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-600' : '' }}">Dashboard</a>
-                        <a href="{{ route('alumni.index') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors {{ request()->routeIs('alumni.*') && !request()->routeIs('alumni.map*') ? 'bg-indigo-50 text-indigo-600' : '' }}">Alumni</a>
-                        <a href="{{ route('alumni.map') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors {{ request()->routeIs('alumni.map*') ? 'bg-indigo-50 text-indigo-600' : '' }}">Alumni Map</a>
+                        <a href="{{ route('alumni.index') }}" class="restricted-link block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors {{ request()->routeIs('alumni.*') && !request()->routeIs('alumni.map*') ? 'bg-indigo-50 text-indigo-600' : '' }}">Alumni Directory</a>
+                        <a href="{{ route('alumni.map') }}" class="restricted-link block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors {{ request()->routeIs('alumni.map*') ? 'bg-indigo-50 text-indigo-600' : '' }}">Alumni Map</a>
                         <a href="{{ route('events.index') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors {{ request()->routeIs('events.*') ? 'bg-indigo-50 text-indigo-600' : '' }}">Events</a>
                         <a href="{{ route('campaigns.index') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors {{ request()->routeIs('campaigns.*') ? 'bg-indigo-50 text-indigo-600' : '' }}">Campaigns</a>
-                        <a href="{{ route('messages.index') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors relative {{ request()->routeIs('messages.*') ? 'bg-indigo-50 text-indigo-600' : '' }}">
+                        <a href="{{ route('messages.index') }}" class="restricted-link block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors relative {{ request()->routeIs('messages.*') ? 'bg-indigo-50 text-indigo-600' : '' }}">
                             Messages
                             <span id="mobile-unread-badge" class="hidden absolute right-3 top-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
                         </a>
@@ -79,7 +123,30 @@
                         @if(auth()->user()->hasRole('manager'))
                             <a href="{{ route('manager.dashboard') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors {{ request()->routeIs('manager.*') ? 'bg-indigo-50 text-indigo-600' : '' }}">Manager</a>
                         @endif
-                        <div class="border-t border-gray-200 pt-2 mt-2">
+                        
+                        <div class="border-t border-gray-200 pt-4 pb-3">
+                            <div class="flex items-center px-4 mb-3">
+                                <div class="flex-shrink-0">
+                                    @if(auth()->user()->profile_image)
+                                        <img class="h-10 w-10 rounded-full object-cover border border-gray-200" src="{{ asset('storage/' . auth()->user()->profile_image) }}" alt="{{ auth()->user()->name }}">
+                                    @else
+                                        <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold border border-indigo-200">
+                                            {{ substr(auth()->user()->name, 0, 1) }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-base font-medium text-gray-800">{{ auth()->user()->name }}</div>
+                                    <div class="text-sm font-medium text-gray-500">{{ auth()->user()->email }}</div>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <a href="{{ route('profile.edit') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors">Edit Profile</a>
+                                <a href="{{ route('profile.employment') }}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded-md transition-colors">Update Employment</a>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-200 pt-2">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-red-600 rounded-md transition-colors">Logout</button>
@@ -113,15 +180,12 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 mt-12 py-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center text-gray-600">
-                <p>&copy; {{ date('Y') }} Alumni Portal. All rights reserved.</p>
-                <p class="mt-2">
-                    <span>Need help? Contact us at </span>
-                    <a href="mailto:admin@gkv.ac.in" class="text-indigo-600 hover:text-indigo-700 underline">admin@gkv.ac.in</a>
-                </p>
-                <p class="mt-2">
-                    Designed by <a href="https://www.nishantmunjal.com" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-700 underline">Dr. Nishant Kumar</a>
-                </p>
+            <div class="text-center text-gray-600 text-sm flex flex-col md:flex-row justify-center items-center gap-2 md:gap-4">
+                <span>&copy; {{ date('Y') }} Alumni Portal. All rights reserved.</span>
+                <span class="hidden md:inline text-gray-300">|</span>
+                <span>Need help? Contact us at <a href="mailto:admin@gkv.ac.in" class="text-indigo-600 hover:text-indigo-700 font-medium">admin@gkv.ac.in</a></span>
+                <span class="hidden md:inline text-gray-300">|</span>
+                <span>Designed by <a href="https://www.nishantmunjal.com" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-700 font-medium">Dr. Nishant Kumar</a></span>
             </div>
         </div>
     </footer>
@@ -149,6 +213,22 @@
                 menu.classList.add('hidden');
                 menuIcon?.classList.remove('hidden');
                 closeIcon?.classList.add('hidden');
+            }
+
+            // User Dropdown Logic
+            const userMenuBtn = document.getElementById('user-menu-button');
+            const userMenuDropdown = document.getElementById('user-menu-dropdown');
+            
+            // Toggle dropdown
+            if (userMenuBtn && userMenuBtn.contains(event.target)) {
+                userMenuDropdown?.classList.toggle('hidden');
+                const isExpanded = userMenuDropdown?.classList.contains('hidden') ? 'false' : 'true';
+                userMenuBtn.setAttribute('aria-expanded', isExpanded);
+            }
+            // Close dropdown when clicking outside
+            else if (userMenuDropdown && !userMenuDropdown.contains(event.target)) {
+                userMenuDropdown.classList.add('hidden');
+                userMenuBtn?.setAttribute('aria-expanded', 'false');
             }
         });
 
@@ -197,7 +277,23 @@
         @auth
         // Update every 30 seconds
         setInterval(updateUnreadCount, 30000);
-        updateUnreadCount();
+        setTimeout(updateUnreadCount, 1000); // Delay slightly to let page load
+
+        // Handle Restricted Links
+        document.addEventListener('DOMContentLoaded', function() {
+             @if(auth()->user()->profile_status !== 'approved' && !auth()->user()->hasAnyRole(['admin', 'manager', 'DataEntry']))
+                const restrictedLinks = document.querySelectorAll('.restricted-link');
+                restrictedLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        alert('Your profile is currently under review. Access to this feature is restricted until approved.');
+                    });
+                    link.setAttribute('href', '#'); 
+                    link.classList.add('opacity-50', 'cursor-not-allowed');
+                    link.title = 'Account pending approval';
+                });
+             @endif
+        });
         @endauth
     </script>
 </body>

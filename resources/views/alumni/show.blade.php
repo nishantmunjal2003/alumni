@@ -137,11 +137,14 @@
                             </p>
                         </div>
                     @endif
-                    @if($alumni->phone)
+                    @if($alumni->phone && ($alumni->is_phone_public || auth()->id() == $alumni->id || auth()->user()->hasAnyRole(['admin', 'manager', 'DataEntry'])))
                         <div>
                             <p class="text-sm text-gray-500">Phone</p>
                             <p class="font-medium">
                                 <a href="tel:{{ $alumni->phone }}" class="text-indigo-600 hover:text-indigo-800 hover:underline">{{ $alumni->phone }}</a>
+                                @if(!$alumni->is_phone_public)
+                                    <span class="text-xs text-gray-500 italic ml-2">(Private)</span>
+                                @endif
                             </p>
                         </div>
                     @endif

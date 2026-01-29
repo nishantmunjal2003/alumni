@@ -44,6 +44,7 @@ class User extends Authenticatable
         'employment_address',
         'employment_city',
         'employment_state',
+        'employment_country',
         'employment_pincode',
         'alternate_email',
         'linkedin_url',
@@ -52,6 +53,7 @@ class User extends Authenticatable
         'profile_completed',
         'profile_status',
         'profile_submitted_at',
+        'is_phone_public',
     ];
 
     /**
@@ -78,6 +80,7 @@ class User extends Authenticatable
             'date_of_birth' => 'date',
             'wedding_anniversary_date' => 'date',
             'profile_submitted_at' => 'datetime',
+            'is_phone_public' => 'boolean',
         ];
     }
 
@@ -148,14 +151,17 @@ class User extends Authenticatable
             $this->residence_city &&
             $this->residence_state &&
             $this->residence_country &&
-            $this->company &&
-            $this->designation &&
-            $this->employment_type &&
-            $this->employment_address &&
-            $this->employment_city &&
-            $this->employment_state &&
-            $this->employment_pincode &&
             $this->phone;
+    }
+
+    /**
+     * Check if employment details are complete.
+     */
+    public function areEmploymentDetailsComplete(): bool
+    {
+        return $this->company &&
+            $this->designation &&
+            $this->employment_type;
     }
 
     /**
@@ -194,7 +200,7 @@ class User extends Authenticatable
      */
     public function shouldBeDeactivatedForMissingProof(): bool
     {
-        if ($this->proof_document) {
+        if ($this->proof_document || $this->profile_status === 'approved') {
             return false;
         }
 

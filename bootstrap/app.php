@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'manager' => \App\Http\Middleware\ManagerMiddleware::class,
             'dataentry' => \App\Http\Middleware\DataEntryMiddleware::class,
             'profile.complete' => \App\Http\Middleware\ProfileCompletionMiddleware::class,
+            'profile.approved' => \App\Http\Middleware\EnsureProfileApproved::class,
         ]);
     })
     ->withSchedule(function (Schedule $schedule): void {

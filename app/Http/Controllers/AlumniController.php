@@ -37,8 +37,9 @@ class AlumniController extends Controller
         // Check for missing optional fields
         $missingEnrollmentNo = ! $user->enrollment_no;
         $missingProofDocument = ! $user->proof_document;
+        $missingEmploymentDetails = ! $user->areEmploymentDetailsComplete();
 
-        return view('alumni.dashboard', compact('batchmates', 'upcomingEvents', 'missingEnrollmentNo', 'missingProofDocument'));
+        return view('alumni.dashboard', compact('batchmates', 'upcomingEvents', 'missingEnrollmentNo', 'missingProofDocument', 'missingEmploymentDetails'));
     }
 
     public function index(Request $request)

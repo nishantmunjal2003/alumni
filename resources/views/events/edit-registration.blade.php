@@ -183,21 +183,22 @@
         <!-- Form Actions -->
         <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/30 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex gap-3 w-full sm:w-auto">
-                <a href="{{ route('events.show', $event->id) }}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                <a href="{{ route('events.show', $event->id) }}" class="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white flex items-center">
                     ← Back to Event
                 </a>
-                <form method="POST" action="{{ route('events.registrations.destroy', [$event->id, $registration->id]) }}" class="inline" onsubmit="return confirm('Are you sure you want to cancel your registration? This action cannot be undone.');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
-                        Cancel Registration
-                    </button>
-                </form>
+                <button type="submit" form="cancel-form" class="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300">
+                    Cancel Registration
+                </button>
             </div>
             <button type="submit" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 font-medium transition-colors shadow-sm hover:shadow w-full sm:w-auto">
                 Update Registration
             </button>
         </div>
+    </form>
+
+    <form id="cancel-form" method="POST" action="{{ route('events.registrations.destroy', [$event->id, $registration->id]) }}" class="hidden" onsubmit="return confirm('Are you sure you want to cancel your registration? This action cannot be undone.');">
+        @csrf
+        @method('DELETE')
     </form>
 </div>
 

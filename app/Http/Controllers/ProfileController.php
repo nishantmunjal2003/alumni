@@ -210,6 +210,9 @@ class ProfileController extends Controller
             $message .= ' Please note: Upload your proof document within 7 days to avoid account deactivation.';
         }
 
+        // Send notification to admin
+        $this->sendAdminNotification($user);
+
         return redirect()->route('dashboard')
             ->with('success', $message);
     }
@@ -268,5 +271,60 @@ class ProfileController extends Controller
 
         return redirect()->route('profile.edit')
             ->with('success', $message);
+    }
+    private function sendAdminNotification($user)
+    {
+        try {
+            $adminEmail = \App\Models\Setting::where('key', 'admin_email')->value('value') ?? 'nishant@gkv.ac.in';
+            \Illuminate\Support\Facades\Mail::to($adminEmail)->send(new \App\Mail\NewAlumniNotification($user));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send admin notification: ' . $e->getMessage());
+        }
+    }
+    public function editEmployment()
+    {
+        $user = auth()->user();
+        $countries = $this->getCountries();
+        return view('profile.employment', compact('user', 'countries'));
+    }
+
+    public function updateEmployment(\Illuminate\Http\Request $request)
+    {
+        $user = auth()->user();
+        
+        $validated = $request->validate([
+            'company' => 'nullable|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'employment_type' => 'nullable|in:Govt,Non-Govt,Business,Other',
+            'employment_address' => 'nullable|string|max:500',
+            'employment_city' => 'nullable|string|max:255',
+            'employment_state' => 'nullable|string|max:255',
+            'employment_country' => 'nullable|string|max:255',
+            'employment_pincode' => 'nullable|string|max:10',
+            'linkedin_url' => 'nullable|url|max:255',
+        ]);
+
+        $user->update($validated);
+
+        return redirect()->route('dashboard')->with('success', 'Employment details updated successfully!');
+    }
+
+    public function updateImage(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'profile_image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $user = auth()->user();
+
+        if ($request->hasFile('profile_image')) {
+            if ($user->profile_image) {
+                Storage::disk('public')->delete($user->profile_image);
+            }
+            $path = $request->file('profile_image')->store('profiles', 'public');
+            $user->update(['profile_image' => $path]);
+        }
+
+        return back()->with('success', 'Profile photo updated successfully!');
     }
 }

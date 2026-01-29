@@ -78,6 +78,15 @@ class MessageController extends Controller
             'message' => $validated['message'],
         ]);
 
+        // Send Email Notification
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(
+                new \App\Mail\NewMessageReceived(auth()->user(), $validated['message'], $user)
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send message notification: ' . $e->getMessage());
+        }
+
         return redirect()->route('messages.show', $user->id)->with('success', 'Message sent!');
     }
 
@@ -88,5 +97,65 @@ class MessageController extends Controller
             ->count();
 
         return response()->json(['count' => $count]);
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $users = User::where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('email', 'like', "%{$query}%");
+            })
+            ->where('id', '!=', auth()->id())
+            ->where('status', 'active')
+            ->limit(10)
+            ->get(['id', 'name', 'profile_image', 'email']);
+
+        $users->transform(function ($user) {
+            $user->profile_image_url = $user->profile_image ? asset('storage/' . $user->profile_image) : null;
+            return $user;
+        });
+
+        return response()->json($users);
+    }
+
+    public function batchStore(Request $request)
+    {
+        $validated = $request->validate([
+            'recipients' => 'required|array',
+            'recipients.*' => 'exists:users,id',
+            'message' => 'required|string|max:5000',
+        ]);
+
+        $currentUser = auth()->user();
+        $messageContent = $validated['message'];
+        $count = 0;
+
+        foreach ($validated['recipients'] as $recipientId) {
+            if ($recipientId == $currentUser->id) continue;
+
+            $recipient = User::find($recipientId);
+            
+            Message::create([
+                'from_user_id' => $currentUser->id,
+                'to_user_id' => $recipientId,
+                'message' => $messageContent,
+            ]);
+
+            try {
+                \Illuminate\Support\Facades\Mail::to($recipient->email)->send(
+                    new \App\Mail\NewMessageReceived($currentUser, $messageContent, $recipient)
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send message notification: ' . $e->getMessage());
+            }
+            $count++;
+        }
+
+        return redirect()->route('messages.index')->with('success', "Message sent to {$count} alumni!");
     }
 }
