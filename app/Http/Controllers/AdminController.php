@@ -928,8 +928,7 @@ class AdminController extends Controller
         $query = User::whereDoesntHave('roles', function ($q) {
             $q->where('name', 'admin');
         })
-            ->where('profile_status', 'pending')
-            ->where('profile_completed', true);
+            ->where('profile_status', 'pending');
 
         // Filter by missing type
         $missingType = $request->get('missing_type', 'both');
@@ -996,7 +995,6 @@ class AdminController extends Controller
                     $q->where('name', 'admin');
                 })
                 ->where('profile_status', 'pending')
-                ->where('profile_completed', true)
                 ->get();
 
             // Queue all emails instead of sending synchronously

@@ -85,6 +85,19 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the profile image URL.
+     *
+     * @return string|null
+     */
+    public function getProfileImageUrlAttribute(): ?string
+    {
+        if (!$this->profile_image) {
+            return null;
+        }
+        return asset('storage/' . $this->profile_image);
+    }
+
+    /**
      * Set the user's name with proper formatting.
      */
     public function setNameAttribute(?string $value): void

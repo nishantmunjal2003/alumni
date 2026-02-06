@@ -262,6 +262,11 @@
                             @error('phone')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
+                            <div class="mt-2 flex items-center">
+                                <input type="hidden" name="is_phone_public" value="0">
+                                <input type="checkbox" name="is_phone_public" id="is_phone_public" value="1" {{ old('is_phone_public', $user->is_phone_public ?? true) ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <label for="is_phone_public" class="ml-2 block text-sm text-gray-700">Allow other alumni to see my phone number</label>
+                            </div>
                         </div>
 
                         <div class="md:col-span-2">
