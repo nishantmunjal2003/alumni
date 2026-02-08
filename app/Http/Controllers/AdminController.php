@@ -12,6 +12,23 @@ use Spatie\Permission\Models\Role;
 
 class AdminController extends Controller
 {
+    public function emailLogs(Request $request)
+    {
+        $query = \App\Models\EmailLog::with('user');
+        
+        if ($request->filled('search')) {
+            $query->where('recipient_email', 'like', '%' . $request->search . '%')
+                  ->orWhere('subject', 'like', '%' . $request->search . '%');
+        }
+        
+        $logs = $query->latest()->paginate(20);
+        return view('admin.email-logs.index', compact('logs'));
+    }
+    
+    public function showEmailLog(\App\Models\EmailLog $emailLog)
+    {
+        return view('admin.email-logs.show', compact('emailLog'));
+    }
     public function __construct()
     {
         $this->middleware(['auth', 'admin']);
@@ -924,6 +941,16 @@ class AdminController extends Controller
      */
     public function showMissingDetailsEmailForm(Request $request)
     {
+        // Check if we are sending to a specific user
+        if ($request->filled('user_id')) {
+            $recipients = User::where('id', $request->user_id)->get();
+            $recipientCount = 1;
+            $missingType = 'custom'; // Indicates a single user context
+            $singleUser = $recipients->first();
+            
+            return view('admin.profiles.missing-details-email-form', compact('recipients', 'recipientCount', 'missingType', 'singleUser'));
+        }
+
         // Start with base query (excluding admins)
         $query = User::whereDoesntHave('roles', function ($q) {
             $q->where('name', 'admin');
@@ -971,10 +998,11 @@ class AdminController extends Controller
         $query->orderBy('name', 'asc');
         $recipients = $query->get();
         $recipientCount = $recipients->count();
+        $singleUser = null;
 
-        return view('admin.profiles.missing-details-email-form', compact('recipients', 'recipientCount', 'missingType'));
+        return view('admin.profiles.missing-details-email-form', compact('recipients', 'recipientCount', 'missingType', 'singleUser'));
     }
-
+    
     /**
      * Send email to alumni with missing details.
      */
@@ -985,7 +1013,7 @@ class AdminController extends Controller
             'message' => 'required|string',
             'recipient_ids' => 'required|array',
             'recipient_ids.*' => 'exists:users,id',
-            'missing_type' => 'nullable|in:both,proof_document,enrollment_no',
+            'missing_type' => 'nullable|in:both,proof_document,enrollment_no,custom',
         ]);
 
         try {

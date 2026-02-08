@@ -1,26 +1,33 @@
 @extends('layouts.admin')
 
-@section('title', 'Send Email to Alumni with Missing Details')
+@section('title', isset($singleUser) ? 'Send Email to ' . $singleUser->name : 'Send Email to Alumni with Missing Details')
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-4 sm:space-y-6 px-4 sm:px-0">
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
         <div>
-            <h1 class="text-2xl sm:text-3xl font-bold">Send Email to Alumni with Missing Details</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold">
+                @if(isset($singleUser))
+                    Send Email to {{ $singleUser->name }}
+                @else
+                    Send Email to Alumni with Missing Details
+                @endif
+            </h1>
             <p class="mt-1 text-sm sm:text-base text-gray-600">
                 <span class="font-semibold text-indigo-600">{{ $recipientCount }}</span> 
                 {{ $recipientCount == 1 ? 'alumnus' : 'alumni' }} will receive this email
             </p>
         </div>
-        <a href="{{ route('admin.profiles.pending') }}" class="text-sm text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1">
+        <a href="{{ isset($singleUser) ? route('admin.profiles.view', $singleUser->id) : route('admin.profiles.pending') }}" class="text-sm text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
-            Back to Pending Profiles
+            Back to {{ isset($singleUser) ? 'Profile' : 'Pending Profiles' }}
         </a>
     </div>
 
-    <!-- Filter Form -->
+    <!-- Filter Form - Hide if Single User -->
+    @if(!isset($singleUser))
     <div class="bg-white shadow rounded-lg p-4 sm:p-6">
         <form method="GET" action="{{ route('admin.profiles.missing-details.email') }}" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -52,10 +59,12 @@
             </div>
         </form>
     </div>
+    @endif
 
     <div class="bg-white shadow rounded-lg p-4 sm:p-6">
         @if ($errors->any())
             <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 mb-6">
+                <!-- Error display logic stays same -->
                 <div class="flex">
                     <div class="flex-shrink-0">
                         <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -78,36 +87,9 @@
 
         @if($recipientCount > 0)
             <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 class="text-sm font-medium text-blue-900 mb-2">Recipients ({{ $recipientCount }} alumni with missing details)</h3>
-                @if(isset($totalApprovedActive) || isset($totalPendingActive) || isset($afterMissingFilter))
-                    <div class="mb-2 text-xs text-gray-600 bg-white p-2 rounded">
-                        <strong>Debug Info:</strong>
-                        @if(isset($totalApprovedActive))
-                            Approved: {{ $totalApprovedActive }} |
-                        @endif
-                        @if(isset($totalPendingActive))
-                            Pending: {{ $totalPendingActive }} |
-                        @endif
-                        @if(isset($afterMissingFilter))
-                            After Missing Filter: {{ $afterMissingFilter }} |
-                        @endif
-                        Final Count: {{ $recipientCount }}
-                    </div>
-                @endif
-                @if(request('missing_type') || request('search'))
-                    <div class="mb-3 text-xs text-blue-700">
-                        <strong>Applied Filters:</strong>
-                        @if(request('missing_type'))
-                            Missing: {{ ucfirst(str_replace('_', ' ', request('missing_type'))) }}
-                        @endif
-                        @if(request('search'))
-                            {{ request('missing_type') ? ' | ' : '' }}Search: "{{ request('search') }}"
-                        @endif
-                    </div>
-                @endif
-                <div class="mb-2 text-xs text-blue-700">
-                    <strong>Note:</strong> All {{ $recipientCount }} recipients will receive the email. Showing preview of first 20 below.
-                </div>
+                <h3 class="text-sm font-medium text-blue-900 mb-2">Recipients ({{ $recipientCount }})</h3>
+                <!-- Debug info logic can stay or be simplified -->
+                
                 <div class="max-h-40 overflow-y-auto">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-blue-800">
                         @foreach($recipients->take(20) as $recipient)
@@ -121,9 +103,6 @@
                                 @endif
                             </div>
                         @endforeach
-                        @if($recipientCount > 20)
-                            <div class="text-blue-600 font-medium">... and {{ $recipientCount - 20 }} more</div>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -144,7 +123,23 @@
 
                 <div>
                     <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                    <textarea name="message" id="message" rows="10" required class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter your message here...">@if(old('message')){{ old('message') }}@else
+                    <textarea name="message" id="message" rows="10" required class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Enter your message here...">@if(old('message')){{ old('message') }}@elseif(isset($singleUser))Dear {{ $singleUser->name }},
+
+We noticed that your profile is missing some important details. Please log in to your account and update the following information:
+
+@if(!$singleUser->proof_document)
+- Proof Document (ID Card/Marksheet)
+@endif
+@if(!$singleUser->enrollment_no)
+- Enrollment Number
+@endif
+[Add any other missing details here]
+
+Thank you for your cooperation.
+
+Best regards,
+Alumni Portal Team
+@else
 Dear @{{name}},
 
 We noticed that your profile is missing some important details. Please log in to your account and update the following information:
@@ -160,7 +155,7 @@ Thank you for your cooperation.
 Best regards,
 Alumni Portal Team
 @endif</textarea>
-                    <p class="mt-1 text-sm text-gray-500">The message will be personalized with each recipient's name. Use @{{name}} as a placeholder.</p>
+                    <p class="mt-1 text-sm text-gray-500">The message will be personalized. @if(!isset($singleUser)) Use @{{name}} as a placeholder. @endif</p>
                 </div>
 
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -172,21 +167,21 @@ Alumni Portal Team
                         </div>
                         <div class="ml-3">
                     <p class="text-sm text-yellow-800">
-                        <strong>Warning:</strong> This will send an email to all {{ $recipientCount }} alumni with missing details{{ $recipientCount > 1 ? ' (filtered list)' : '' }}. Please review your message before sending.
+                        <strong>Warning:</strong> This will send an email to {{ $recipientCount }} recipient(s). Please review your message before sending.
                     </p>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-6 border-t">
-                    <a href="{{ route('admin.profiles.pending') }}" class="w-full sm:w-auto text-center bg-gray-200 text-gray-700 px-6 py-2.5 rounded-md hover:bg-gray-300 transition-colors touch-manipulation">
+                    <a href="{{ isset($singleUser) ? route('admin.profiles.view', $singleUser->id) : route('admin.profiles.pending') }}" class="w-full sm:w-auto text-center bg-gray-200 text-gray-700 px-6 py-2.5 rounded-md hover:bg-gray-300 transition-colors touch-manipulation">
                         Cancel
                     </a>
-                    <button type="submit" class="w-full sm:w-auto bg-green-600 text-white px-6 py-2.5 rounded-md hover:bg-green-700 transition-colors touch-manipulation inline-flex items-center justify-center gap-2" onclick="return confirm('Are you sure you want to send this email to {{ $recipientCount }} recipients?')">
+                    <button type="submit" class="w-full sm:w-auto bg-green-600 text-white px-6 py-2.5 rounded-md hover:bg-green-700 transition-colors touch-manipulation inline-flex items-center justify-center gap-2" onclick="return confirm('Are you sure you want to send this email?')">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                         </svg>
-                        Send Email to All
+                        Send Email {{ isset($singleUser) ? '' : 'to All' }}
                     </button>
                 </div>
             </form>

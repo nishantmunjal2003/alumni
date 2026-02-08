@@ -35,6 +35,7 @@
                             Messages
                             <span id="admin-unread-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
                         </a>
+                        <a href="{{ route('admin.analytics.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.analytics.*') ? 'font-semibold' : '' }}">Analytics</a>
                         <a href="{{ route('admin.settings.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.settings.*') ? 'font-semibold' : '' }}">Settings</a>
                         
                         <!-- User Menu -->
@@ -79,6 +80,7 @@
                             Messages
                             <span id="admin-mobile-unread-badge" class="hidden absolute right-2 top-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
                         </a>
+                        <a href="{{ route('admin.analytics.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.analytics.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Analytics</a>
                         <div class="border-t border-purple-500 pt-2 mt-2">
                             <div class="text-white text-sm px-2 py-1">{{ auth()->user()->name }}</div>
                             <a href="{{ route('dashboard') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 flex items-center gap-2">

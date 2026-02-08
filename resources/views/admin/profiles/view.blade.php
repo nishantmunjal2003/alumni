@@ -176,6 +176,14 @@
                 </svg>
                 Edit Profile
             </a>
+            
+            <a href="{{ route('admin.profiles.missing-details.email', ['user_id' => $user->id]) }}" class="w-full sm:w-auto text-center bg-yellow-500 text-white px-6 py-2.5 rounded-md hover:bg-yellow-600 transition-colors touch-manipulation inline-flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                Send Email
+            </a>
+
             <form method="POST" action="{{ route('admin.profiles.approve', $user->id) }}" class="w-full sm:w-auto">
                 @csrf
                 <button type="submit" class="w-full sm:w-auto bg-green-600 text-white px-6 py-2.5 rounded-md hover:bg-green-700 transition-colors touch-manipulation" onclick="return confirm('Are you sure you want to approve this profile?')">

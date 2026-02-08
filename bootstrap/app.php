@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'profile.complete' => \App\Http\Middleware\ProfileCompletionMiddleware::class,
             'profile.approved' => \App\Http\Middleware\EnsureProfileApproved::class,
         ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\LogActivity::class,
+        ]);
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('accounts:deactivate-without-proof')->daily();

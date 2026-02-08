@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\AlumniMapController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\DataEntryController;
@@ -175,6 +176,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/alumni/{user}/email', [AdminController::class, 'sendEmailToAlumni'])->name('alumni.email.send');
     Route::get('/alumni/email/bulk', [AdminController::class, 'showBulkEmailForm'])->name('alumni.email.bulk');
     Route::post('/alumni/email/bulk', [AdminController::class, 'sendBulkEmail'])->name('alumni.email.bulk.send');
+    
+    // Analytics
+    Route::group(['prefix' => 'analytics', 'as' => 'analytics.'], function() {
+        Route::get('/', [AnalyticsController::class, 'index'])->name('index');
+        Route::get('/activity', [AnalyticsController::class, 'activity'])->name('activity');
+        Route::get('/emails', [AnalyticsController::class, 'emailLogs'])->name('emails');
+        Route::get('/emails/{emailLog}', [AnalyticsController::class, 'showEmailLog'])->name('emails.show');
+    });
 });
 
 // Manager routes
