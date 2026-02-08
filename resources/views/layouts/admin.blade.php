@@ -32,8 +32,8 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             <!-- Invisible bridge to prevent closing -->
-                            <div class="absolute left-0 top-full w-48 h-2 bg-transparent"></div>
-                            <div class="absolute left-0 top-[calc(100%+0.5rem)] w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
+                            <div class="absolute left-0 top-full w-full h-2"></div>
+                            <div class="absolute left-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
                                 <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.users.*') ? 'bg-gray-50 font-medium' : '' }}">All Users</a>
                                 <a href="{{ route('admin.roles.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.roles.*') ? 'bg-gray-50 font-medium' : '' }}">Roles & Permissions</a>
                                 <a href="{{ route('admin.profiles.pending') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.profiles.*') ? 'bg-gray-50 font-medium' : '' }}">Pending Profiles</a>
@@ -47,8 +47,8 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                              <!-- Invisible bridge -->
-                            <div class="absolute left-0 top-full w-48 h-2 bg-transparent"></div>
-                            <div class="absolute left-0 top-[calc(100%+0.5rem)] w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
+                            <div class="absolute left-0 top-full w-full h-2"></div>
+                            <div class="absolute left-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
                                 <a href="{{ route('admin.events.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.events.*') ? 'bg-gray-50 font-medium' : '' }}">Events</a>
                                 <a href="{{ route('admin.campaigns.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.campaigns.*') ? 'bg-gray-50 font-medium' : '' }}">Campaigns</a>
                             </div>
@@ -61,8 +61,8 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                              <!-- Invisible bridge -->
-                            <div class="absolute left-0 top-full w-48 h-2 bg-transparent"></div>
-                            <div class="absolute left-0 top-[calc(100%+0.5rem)] w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
+                            <div class="absolute left-0 top-full w-full h-2"></div>
+                            <div class="absolute left-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
                                 <a href="{{ route('admin.alumni.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.alumni.*') && !request()->routeIs('admin.alumni.map*') ? 'bg-gray-50 font-medium' : '' }}">Alumni Directory</a>
                                 <a href="{{ route('admin.alumni.map') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.alumni.map*') ? 'bg-gray-50 font-medium' : '' }}">Alumni Map</a>
                                 <a href="{{ route('messages.index') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between {{ request()->routeIs('messages.*') ? 'bg-gray-50 font-medium' : '' }}">
@@ -79,8 +79,8 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                              <!-- Invisible bridge -->
-                            <div class="absolute left-0 top-full w-48 h-2 bg-transparent"></div>
-                            <div class="absolute left-0 top-[calc(100%+0.5rem)] w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
+                            <div class="absolute left-0 top-full w-full h-2"></div>
+                            <div class="absolute left-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
                                 <a href="{{ route('admin.analytics.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.analytics.*') ? 'bg-gray-50 font-medium' : '' }}">Analytics</a>
                                 <a href="{{ route('admin.settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.settings.*') ? 'bg-gray-50 font-medium' : '' }}">Settings</a>
                             </div>
