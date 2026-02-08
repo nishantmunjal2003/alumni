@@ -24,19 +24,67 @@
                 <div class="hidden md:flex items-center space-x-4">
                     @auth
                         <a href="{{ route('admin.dashboard') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.dashboard') ? 'font-semibold' : '' }}">Dashboard</a>
-                        <a href="{{ route('admin.users.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.users.*') ? 'font-semibold' : '' }}">Users</a>
-                        <a href="{{ route('admin.roles.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.roles.*') ? 'font-semibold' : '' }}">Roles</a>
-                        <a href="{{ route('admin.events.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.events.*') ? 'font-semibold' : '' }}">Events</a>
-                        <a href="{{ route('admin.campaigns.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.campaigns.*') ? 'font-semibold' : '' }}">Campaigns</a>
-                        <a href="{{ route('admin.profiles.pending') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.profiles.*') ? 'font-semibold' : '' }}">Pending Profiles</a>
-                        <a href="{{ route('admin.alumni.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.alumni.*') && !request()->routeIs('admin.alumni.map*') ? 'font-semibold' : '' }}">Alumni Directory</a>
-                        <a href="{{ route('admin.alumni.map') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.alumni.map*') ? 'font-semibold' : '' }}">Alumni Map</a>
-                        <a href="{{ route('messages.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('messages.*') ? 'font-semibold' : '' }} relative">
-                            Messages
-                            <span id="admin-unread-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
-                        </a>
-                        <a href="{{ route('admin.analytics.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.analytics.*') ? 'font-semibold' : '' }}">Analytics</a>
-                        <a href="{{ route('admin.settings.index') }}" class="text-white hover:text-purple-200 transition-colors {{ request()->routeIs('admin.settings.*') ? 'font-semibold' : '' }}">Settings</a>
+
+                        <!-- User Management Dropdown -->
+                        <div class="relative group h-full flex items-center">
+                            <button class="text-white hover:text-purple-200 transition-colors flex items-center gap-1 h-full {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.profiles.*') ? 'font-semibold' : '' }}">
+                                Users & Profiles
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <!-- Invisible bridge to prevent closing -->
+                            <div class="absolute left-0 top-full w-48 h-2 bg-transparent"></div>
+                            <div class="absolute left-0 top-[calc(100%+0.5rem)] w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
+                                <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.users.*') ? 'bg-gray-50 font-medium' : '' }}">All Users</a>
+                                <a href="{{ route('admin.roles.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.roles.*') ? 'bg-gray-50 font-medium' : '' }}">Roles & Permissions</a>
+                                <a href="{{ route('admin.profiles.pending') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.profiles.*') ? 'bg-gray-50 font-medium' : '' }}">Pending Profiles</a>
+                            </div>
+                        </div>
+
+                        <!-- Events & Campaigns Dropdown -->
+                        <div class="relative group h-full flex items-center">
+                            <button class="text-white hover:text-purple-200 transition-colors flex items-center gap-1 h-full {{ request()->routeIs('admin.events.*') || request()->routeIs('admin.campaigns.*') ? 'font-semibold' : '' }}">
+                                Engagement
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                             <!-- Invisible bridge -->
+                            <div class="absolute left-0 top-full w-48 h-2 bg-transparent"></div>
+                            <div class="absolute left-0 top-[calc(100%+0.5rem)] w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
+                                <a href="{{ route('admin.events.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.events.*') ? 'bg-gray-50 font-medium' : '' }}">Events</a>
+                                <a href="{{ route('admin.campaigns.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.campaigns.*') ? 'bg-gray-50 font-medium' : '' }}">Campaigns</a>
+                            </div>
+                        </div>
+
+                        <!-- Alumni Network Dropdown -->
+                        <div class="relative group h-full flex items-center">
+                            <button class="text-white hover:text-purple-200 transition-colors flex items-center gap-1 h-full {{ request()->routeIs('admin.alumni.*') || request()->routeIs('messages.*') ? 'font-semibold' : '' }}">
+                                Alumni Network
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                             <!-- Invisible bridge -->
+                            <div class="absolute left-0 top-full w-48 h-2 bg-transparent"></div>
+                            <div class="absolute left-0 top-[calc(100%+0.5rem)] w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
+                                <a href="{{ route('admin.alumni.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.alumni.*') && !request()->routeIs('admin.alumni.map*') ? 'bg-gray-50 font-medium' : '' }}">Alumni Directory</a>
+                                <a href="{{ route('admin.alumni.map') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.alumni.map*') ? 'bg-gray-50 font-medium' : '' }}">Alumni Map</a>
+                                <a href="{{ route('messages.index') }}" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between {{ request()->routeIs('messages.*') ? 'bg-gray-50 font-medium' : '' }}">
+                                    Messages
+                                    <span id="admin-dropdown-unread-badge" class="hidden bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"></span>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- System Dropdown -->
+                        <div class="relative group h-full flex items-center">
+                            <button class="text-white hover:text-purple-200 transition-colors flex items-center gap-1 h-full {{ request()->routeIs('admin.analytics.*') || request()->routeIs('admin.settings.*') ? 'font-semibold' : '' }}">
+                                System
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                             <!-- Invisible bridge -->
+                            <div class="absolute left-0 top-full w-48 h-2 bg-transparent"></div>
+                            <div class="absolute left-0 top-[calc(100%+0.5rem)] w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block border border-gray-100">
+                                <a href="{{ route('admin.analytics.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.analytics.*') ? 'bg-gray-50 font-medium' : '' }}">Analytics</a>
+                                <a href="{{ route('admin.settings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request()->routeIs('admin.settings.*') ? 'bg-gray-50 font-medium' : '' }}">Settings</a>
+                            </div>
+                        </div>
                         
                         <!-- User Menu -->
                         <div class="flex items-center gap-3 pl-4 border-l border-purple-500">
@@ -66,22 +114,32 @@
 
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-purple-500">
-                <div class="flex flex-col space-y-2 mt-4">
+                <div class="flex flex-col space-y-1 mt-4">
                     @auth
                         <a href="{{ route('admin.dashboard') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.dashboard') ? 'font-semibold bg-purple-800 rounded' : '' }}">Dashboard</a>
-                        <a href="{{ route('admin.users.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.users.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Users</a>
-                        <a href="{{ route('admin.roles.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.roles.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Roles</a>
-                        <a href="{{ route('admin.events.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.events.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Events</a>
-                        <a href="{{ route('admin.campaigns.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.campaigns.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Campaigns</a>
-                        <a href="{{ route('admin.profiles.pending') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.profiles.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Pending Profiles</a>
-                        <a href="{{ route('admin.alumni.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.alumni.*') && !request()->routeIs('admin.alumni.map*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Alumni Directory</a>
-                        <a href="{{ route('admin.alumni.map') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.alumni.map*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Alumni Map</a>
-                        <a href="{{ route('messages.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('messages.*') ? 'font-semibold bg-purple-800 rounded' : '' }} relative">
+
+                        <div class="px-2 pt-3 pb-1 text-xs font-semibold text-purple-200 uppercase tracking-wider">User Management</div>
+                        <a href="{{ route('admin.users.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 pl-4 {{ request()->routeIs('admin.users.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Users</a>
+                        <a href="{{ route('admin.roles.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 pl-4 {{ request()->routeIs('admin.roles.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Roles</a>
+                        <a href="{{ route('admin.profiles.pending') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 pl-4 {{ request()->routeIs('admin.profiles.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Pending Profiles</a>
+
+                        <div class="px-2 pt-3 pb-1 text-xs font-semibold text-purple-200 uppercase tracking-wider">Engagement</div>
+                        <a href="{{ route('admin.events.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 pl-4 {{ request()->routeIs('admin.events.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Events</a>
+                        <a href="{{ route('admin.campaigns.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 pl-4 {{ request()->routeIs('admin.campaigns.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Campaigns</a>
+
+                        <div class="px-2 pt-3 pb-1 text-xs font-semibold text-purple-200 uppercase tracking-wider">Alumni Network</div>
+                        <a href="{{ route('admin.alumni.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 pl-4 {{ request()->routeIs('admin.alumni.*') && !request()->routeIs('admin.alumni.map*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Alumni Directory</a>
+                        <a href="{{ route('admin.alumni.map') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 pl-4 {{ request()->routeIs('admin.alumni.map*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Alumni Map</a>
+                        <a href="{{ route('messages.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 pl-4 {{ request()->routeIs('messages.*') ? 'font-semibold bg-purple-800 rounded' : '' }} relative">
                             Messages
                             <span id="admin-mobile-unread-badge" class="hidden absolute right-2 top-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"></span>
                         </a>
-                        <a href="{{ route('admin.analytics.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 {{ request()->routeIs('admin.analytics.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Analytics</a>
-                        <div class="border-t border-purple-500 pt-2 mt-2">
+
+                        <div class="px-2 pt-3 pb-1 text-xs font-semibold text-purple-200 uppercase tracking-wider">System</div>
+                        <a href="{{ route('admin.analytics.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 pl-4 {{ request()->routeIs('admin.analytics.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Analytics</a>
+                        <a href="{{ route('admin.settings.index') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 pl-4 {{ request()->routeIs('admin.settings.*') ? 'font-semibold bg-purple-800 rounded' : '' }}">Settings</a>
+
+                        <div class="border-t border-purple-500 pt-2 mt-4">
                             <div class="text-white text-sm px-2 py-1">{{ auth()->user()->name }}</div>
                             <a href="{{ route('dashboard') }}" class="text-white hover:text-purple-200 transition-colors px-2 py-1 flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,6 +196,15 @@
                         mobileBadge.classList.remove('hidden');
                     } else if (mobileBadge) {
                         mobileBadge.classList.add('hidden');
+                    }
+
+                    // Dropdown badge
+                    const dropdownBadge = document.getElementById('admin-dropdown-unread-badge');
+                    if (dropdownBadge && data.count > 0) {
+                        dropdownBadge.textContent = data.count;
+                        dropdownBadge.classList.remove('hidden');
+                    } else if (dropdownBadge) {
+                        dropdownBadge.classList.add('hidden');
                     }
                 });
         }

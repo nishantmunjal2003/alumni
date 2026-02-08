@@ -11,7 +11,14 @@
                     <div class="flex items-start gap-3 flex-1">
                         <span class="text-sm font-semibold text-indigo-600 mt-1">#{{ ($pendingProfiles->currentPage() - 1) * $pendingProfiles->perPage() + $index + 1 }}</span>
                         <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-900">{{ $profile->name }}</h3>
+                            <h3 class="text-lg font-semibold text-gray-900 flex items-center flex-wrap gap-2">
+                                {{ $profile->name }}
+                                @if($profile->profile_last_updated_at && $profile->profile_last_updated_at->gt($profile->profile_submitted_at))
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        Updated
+                                    </span>
+                                @endif
+                            </h3>
                             <p class="text-sm text-gray-600 mt-1">{{ $profile->email }}</p>
                         </div>
                     </div>
@@ -98,7 +105,14 @@
                                 <div class="text-sm font-medium text-gray-900">{{ ($pendingProfiles->currentPage() - 1) * $pendingProfiles->perPage() + $index + 1 }}</div>
                             </td>
                             <td class="px-3 py-2">
-                                <div class="text-sm font-medium text-gray-900 truncate max-w-[9rem]" title="{{ $profile->name }}">{{ $profile->name }}</div>
+                                <div class="text-sm font-medium text-gray-900 truncate max-w-[9rem]" title="{{ $profile->name }}">
+                                    {{ $profile->name }}
+                                    @if($profile->profile_last_updated_at && $profile->profile_last_updated_at->gt($profile->profile_submitted_at))
+                                        <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            Updated
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-3 py-2">
                                 <div class="text-sm text-gray-900 truncate max-w-[12rem]" title="{{ $profile->email }}">{{ $profile->email }}</div>

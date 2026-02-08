@@ -53,6 +53,7 @@ class User extends Authenticatable
         'profile_completed',
         'profile_status',
         'profile_submitted_at',
+        'profile_last_updated_at',
         'is_phone_public',
     ];
 
@@ -76,10 +77,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'profile_completed' => 'boolean',
             'date_of_birth' => 'date',
             'wedding_anniversary_date' => 'date',
             'profile_submitted_at' => 'datetime',
+            'profile_last_updated_at' => 'datetime',
+            'welcome_email_sent_at' => 'datetime',
+            'profile_completed' => 'boolean',
             'is_phone_public' => 'boolean',
         ];
     }

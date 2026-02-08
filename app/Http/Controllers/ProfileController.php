@@ -260,6 +260,10 @@ class ProfileController extends Controller
             unset($validated['profile_completed'], $validated['profile_status']);
         }
 
+        if ($user->profile_status === 'pending') {
+            $validated['profile_last_updated_at'] = now();
+        }
+
         $user->update($validated);
 
         $message = 'Profile updated successfully!';
@@ -304,7 +308,13 @@ class ProfileController extends Controller
             'linkedin_url' => 'nullable|url|max:255',
         ]);
 
-        $user->update($validated);
+        // Update profile status if pending
+        if ($user->profile_status === 'pending') {
+            $user->profile_last_updated_at = now();
+        }
+
+        $user->fill($validated);
+        $user->save();
 
         return redirect()->route('dashboard')->with('success', 'Employment details updated successfully!');
     }
