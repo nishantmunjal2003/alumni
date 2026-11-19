@@ -1,8 +1,10 @@
 #!/bin/sh
 set -e
 
-# Ensure permissions on storage and bootstrap/cache
-mkdir -p /var/www/html/storage/framework/cache/data \
+# Ensure system and application directories exist
+mkdir -p /var/log/supervisor \
+         /run/nginx \
+         /var/www/html/storage/framework/cache/data \
          /var/www/html/storage/framework/sessions \
          /var/www/html/storage/framework/views \
          /var/www/html/storage/logs \

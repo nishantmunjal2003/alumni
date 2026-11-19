@@ -65,7 +65,8 @@ RUN cp docker/nginx.conf /etc/nginx/nginx.conf \
     && cp docker/php.ini $PHP_INI_DIR/conf.d/custom.ini \
     && cp docker/supervisord.conf /etc/supervisord.conf \
     && cp docker/entrypoint.sh /usr/local/bin/entrypoint.sh \
-    && chmod +x /usr/local/bin/entrypoint.sh
+    && chmod +x /usr/local/bin/entrypoint.sh \
+    && mkdir -p /var/log/supervisor /run/nginx
 
 # Ensure storage directories exist and have proper permissions
 RUN mkdir -p storage/framework/cache/data \
