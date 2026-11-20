@@ -233,3 +233,21 @@ Route::middleware(['auth', 'dataentry'])->prefix('dataentry')->name('dataentry.'
     Route::get('/profiles/{user}/email', [DataEntryController::class, 'showEmailForm'])->name('profiles.email');
     Route::post('/profiles/{user}/email', [DataEntryController::class, 'sendEmail'])->name('profiles.email.send');
 });
+
+// Storage fallback route for serving S3/RustFS files when requested via /storage/...
+Route::get('/storage/{path}', function (string $path) {
+    if (file_exists(storage_path('app/public/' . $path))) {
+        return response()->file(storage_path('app/public/' . $path));
+    }
+
+    $s3Endpoint = config('filesystems.disks.s3.endpoint');
+    $s3Bucket = config('filesystems.disks.s3.bucket');
+    $s3Url = config('filesystems.disks.s3.url');
+
+    if ($s3Endpoint && $s3Bucket) {
+        $baseUrl = $s3Url ?: (rtrim($s3Endpoint, '/') . '/' . $s3Bucket);
+        return redirect()->away(rtrim($baseUrl, '/') . '/' . ltrim($path, '/'));
+    }
+
+    abort(404);
+})->where('path', '.*')->name('storage.fallback');
