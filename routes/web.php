@@ -16,6 +16,7 @@ use App\Models\Campaign;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 // Public routes
 Route::get('/', function () {
@@ -236,6 +237,35 @@ Route::middleware(['auth', 'dataentry'])->prefix('dataentry')->name('dataentry.'
 
 // Storage fallback route for serving S3/RustFS files when requested via /storage/...
 Route::get('/storage/{path}', function (string $path) {
+    // 1. Security enforcement for sensitive proof documents
+    if (str_starts_with($path, 'proof-documents/') || str_starts_with($path, 'proof-documents\\')) {
+        if (! auth()->check()) {
+            return redirect()->guest(route('login'))->with('error', 'Please log in to view this document.');
+        }
+
+        $user = auth()->user();
+        $isAdminOrStaff = $user->hasAnyRole(['admin', 'manager', 'DataEntry', 'dataentry']);
+        $isOwner = ($user->proof_document === $path || basename($user->proof_document ?? '') === basename($path));
+
+        if (! $isAdminOrStaff && ! $isOwner) {
+            abort(403, 'Unauthorized to view this document.');
+        }
+
+        // Check local disk first
+        if (file_exists(storage_path('app/public/' . $path))) {
+            return response()->file(storage_path('app/public/' . $path));
+        }
+
+        // Stream securely from S3 / RustFS
+        $disk = config('filesystems.default') === 's3' || env('FILESYSTEM_DISK') === 's3' ? 's3' : 'public';
+        if (Storage::disk($disk)->exists($path)) {
+            return Storage::disk($disk)->response($path);
+        }
+
+        abort(404);
+    }
+
+    // 2. Public media (profiles, events, campaigns, event-photos)
     if (file_exists(storage_path('app/public/' . $path))) {
         return response()->file(storage_path('app/public/' . $path));
     }
