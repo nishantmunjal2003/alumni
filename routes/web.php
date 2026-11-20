@@ -240,12 +240,16 @@ Route::get('/storage/{path}', function (string $path) {
         return response()->file(storage_path('app/public/' . $path));
     }
 
-    $s3Endpoint = config('filesystems.disks.s3.endpoint');
-    $s3Bucket = config('filesystems.disks.s3.bucket');
-    $s3Url = config('filesystems.disks.s3.url');
+    $s3Url = config('filesystems.disks.s3.url') ?: config('filesystems.disks.public.url') ?: env('AWS_URL');
+    if ($s3Url) {
+        return redirect()->away(rtrim($s3Url, '/') . '/' . ltrim($path, '/'));
+    }
+
+    $s3Endpoint = config('filesystems.disks.s3.endpoint') ?: config('filesystems.disks.public.endpoint') ?: env('AWS_ENDPOINT');
+    $s3Bucket = config('filesystems.disks.s3.bucket') ?: config('filesystems.disks.public.bucket') ?: env('AWS_BUCKET');
 
     if ($s3Endpoint && $s3Bucket) {
-        $baseUrl = $s3Url ?: (rtrim($s3Endpoint, '/') . '/' . $s3Bucket);
+        $baseUrl = rtrim($s3Endpoint, '/') . '/' . $s3Bucket;
         return redirect()->away(rtrim($baseUrl, '/') . '/' . ltrim($path, '/'));
     }
 
